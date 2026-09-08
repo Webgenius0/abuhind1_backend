@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 class UserSeeder extends Seeder
 {
@@ -13,6 +14,7 @@ class UserSeeder extends Seeder
     {
         // Normal User
         User::create([
+            'user_id'           => 'USR-' . strtoupper(Str::random(6)),
             'name' => 'User',
             'email' => 'user@user.com',
             'password' => Hash::make('12345678'),
@@ -21,6 +23,7 @@ class UserSeeder extends Seeder
 
         // Admin User
         User::create([
+            'user_id'           => 'USR-' . strtoupper(Str::random(6)),
             'name' => 'Admin',
             'email' => 'admin@admin.com',
             'password' => Hash::make('12345678'),

@@ -14,7 +14,7 @@
 
     <style>
         body {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #0da100, #0c460c);
             /* same as welcome page */
             height: 100vh;
             display: flex;

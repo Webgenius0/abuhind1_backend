@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\RegisterController;
+use App\Http\Controllers\Api\Auth\SocialLoginController;
 use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\SocialMediaController;
 use App\Http\Controllers\Api\SystemSettingController;
@@ -13,8 +14,8 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
-Route::post('/social-login', [SocialAuthController::class, 'socialLogin']);
-
+// Route::post('/social-login', [SocialAuthController::class, 'socialLogin']);
+Route::post('/social-login', [SocialLoginController::class, 'socialLogin']);
 Route::controller(RegisterController::class)->prefix('users/register')->group(function () {
     // User Register
     Route::post('/', 'userRegister');
@@ -45,6 +46,8 @@ Route::controller(LoginController::class)->prefix('users/login')->group(function
     Route::post('/reset-password', 'resetPassword');
 });
 
+
+Route::post('/login-with-user-id', [SocialLoginController::class, 'loginWithUserId']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::controller(SystemSettingController::class)->group(function () {
         Route::get('/site-settings', 'index');
