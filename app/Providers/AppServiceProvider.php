@@ -7,6 +7,10 @@ use App\Contracts\RegistrationOtpInterface;
 use App\Contracts\UserOtpInterface;
 use App\Services\OtpService;
 use App\Models\SystemSetting;
+use App\Repositories\Contracts\FaceScanRepositoryInterface;
+use App\Repositories\FaceScanRepository;
+use App\Repositories\VideoTutorial\VideoTutorialRepositoryInterface;
+use App\Repositories\VideoTutorialRepository;
 use App\Services\AuthService;
 use Illuminate\Support\ServiceProvider;
 
@@ -17,6 +21,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(RegistrationOtpInterface::class, OtpService::class);
         $this->app->bind(UserOtpInterface::class, OtpService::class);
         $this->app->bind(AuthServiceInterface::class, AuthService::class);
+
+        $this->app->bind(
+            FaceScanRepositoryInterface::class,
+            FaceScanRepository::class
+        );
+
     }
     public function boot(): void
     {

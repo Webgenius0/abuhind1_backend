@@ -17,11 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->name('admin.')
                 ->group(base_path('routes/admin.php'));
             Route::middleware(['web'])
-            ->group(base_path('routes/frontend.php'));
+                ->group(base_path('routes/frontend.php'));
         }
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Sanctum API State-এর জন্য এটি প্রয়োজন
+        $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

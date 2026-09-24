@@ -3,10 +3,13 @@
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\SocialLoginController;
+use App\Http\Controllers\Api\DynamicPageApiController;
+use App\Http\Controllers\Api\FaceAnalysisController;
 use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\SocialMediaController;
 use App\Http\Controllers\Api\SystemSettingController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\VideoTutorialController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +19,8 @@ use Illuminate\Support\Facades\Route;
 
 // Route::post('/social-login', [SocialAuthController::class, 'socialLogin']);
 Route::post('/social-login', [SocialLoginController::class, 'socialLogin']);
+Route::post('/login-with-user-id', [SocialLoginController::class, 'loginWithUserId']);
+
 Route::controller(RegisterController::class)->prefix('users/register')->group(function () {
     // User Register
     Route::post('/', 'userRegister');
@@ -47,23 +52,27 @@ Route::controller(LoginController::class)->prefix('users/login')->group(function
 });
 
 
-Route::post('/login-with-user-id', [SocialLoginController::class, 'loginWithUserId']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::controller(SystemSettingController::class)->group(function () {
         Route::get('/site-settings', 'index');
     });
 
+
+    Route::post('/face-scan', [FaceAnalysisController::class, 'store']);
+    Route::get('/pages', [DynamicPageApiController::class, 'index']);
+    Route::get('/pages/{slug}', [DynamicPageApiController::class, 'show']);
+    Route::get('/video-tutorials', [VideoTutorialController::class, 'index']);
     Route::controller(SocialMediaController::class)->group(function () {
         Route::get('/social-links', 'index');
     });
-
     Route::prefix('user')->controller(UserController::class)->group(function () {
         Route::get('/', 'userDetails');
         Route::post('/update', 'updateUser');
         Route::post('/update-password', 'updatePassword');
         Route::delete('/delete-account', 'deleteAccount');
         Route::post('/logout', 'logoutUser');
+        Route::post('/onboarding', [SocialLoginController::class, 'completeOnboarding']);
     });
-
 
 });

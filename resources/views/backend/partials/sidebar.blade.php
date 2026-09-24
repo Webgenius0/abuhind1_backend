@@ -39,10 +39,10 @@
                            </svg>
                            <span>Dashboard</span></a></li>
 
+                   <!-- Settings Menu (Without Dynamic Page & Video Tutorials) -->
                    <li class="sidebar-list">
                        <i class="fa fa-thumb-tack"></i>
-                       <a class="sidebar-link sidebar-title
-        {{ request()->routeIs('admin.system.*') || request()->routeIs('admin.profile.*') || request()->routeIs('admin.social.*') ? 'active' : '' }}"
+                       <a class="sidebar-link sidebar-title {{ request()->routeIs('admin.system.*') || request()->routeIs('admin.profile.*') || request()->routeIs('admin.social.*') ? 'active' : '' }}"
                            href="#">
                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
                                fill="none" stroke="#ffffff" stroke-width="1" stroke-linecap="round"
@@ -57,9 +57,8 @@
                            </svg>
                            <span>Settings</span>
                        </a>
-
                        <ul
-                           class="sidebar-submenu {{ request()->routeIs('admin.system.*') || request()->routeIs('admin.profile.*') || request()->routeIs('admin.social.*') || request()->routeIs('admin.dynamic_page.*') ? 'd-block' : '' }}">
+                           class="sidebar-submenu {{ request()->routeIs('admin.system.*') || request()->routeIs('admin.profile.*') || request()->routeIs('admin.social.*') ? 'd-block' : '' }}">
                            <li>
                                <a class="{{ request()->routeIs('admin.system.*') ? 'active' : '' }}"
                                    href="{{ route('admin.system.index') }}">
@@ -78,10 +77,34 @@
                                    Social Setting
                                </a>
                            </li>
+                       </ul>
+                   </li>
+
+                   <!-- Separate Menu for Dynamic Page & Video Tutorials -->
+                   <li class="sidebar-list">
+                       <i class="fa fa-thumb-tack"></i>
+                       <a class="sidebar-link sidebar-title {{ request()->routeIs('admin.dynamic_page.*') || request()->routeIs('admin.video_tutorial.*') ? 'active' : '' }}"
+                           href="#">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                               fill="none" stroke="#ffffff" stroke-width="1" stroke-linecap="round"
+                               stroke-linejoin="round">
+                               <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0 -3 -3h-7z"></path>
+                               <path d="M22 3h-6a4 4 0 0 0 -4 4v14a3 3 0 0 1 3 -3h7z"></path>
+                           </svg>
+                           <span>CMS Management</span>
+                       </a>
+                       <ul
+                           class="sidebar-submenu {{ request()->routeIs('admin.dynamic_page.*') || request()->routeIs('admin.video_tutorial.*') ? 'd-block' : '' }}">
                            <li>
                                <a class="{{ request()->routeIs('admin.dynamic_page.*') ? 'active' : '' }}"
                                    href="{{ route('admin.dynamic_page.index') }}">
                                    Dynamic Page
+                               </a>
+                           </li>
+                           <li>
+                               <a class="{{ request()->routeIs('admin.video_tutorial.*') ? 'active' : '' }}"
+                                   href="{{ route('admin.video_tutorial.index') }}">
+                                   Video Tutorials
                                </a>
                            </li>
                        </ul>

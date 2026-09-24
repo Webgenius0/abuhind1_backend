@@ -7,6 +7,7 @@ use App\Http\Controllers\Web\Backend\DynamicPageController;
 use App\Http\Controllers\Web\Backend\ProfileController;
 use App\Http\Controllers\Web\Backend\SocialMediaController;
 use App\Http\Controllers\Web\Backend\SystemSettingController;
+use App\Http\Controllers\Web\Backend\VideoTutorialController;
 
 Route::get('/dashboard', [DashBoardController::class, 'index'])
     ->middleware(['auth', 'verified'])
@@ -36,4 +37,13 @@ Route::controller(DynamicPageController::class)->group(function () {
     Route::post('/dynamic-page/update/{id}', 'update')->name('dynamic_page.update');
     Route::get('/dynamic-page/status/{id}', 'status')->name('dynamic_page.status');
     Route::delete('/dynamic-page/destroy/{id}', 'destroy')->name('dynamic_page.destroy');
+});
+Route::controller(VideoTutorialController::class)->group(function () {
+    Route::get('/video-tutorial', 'index')->name('video_tutorial.index');
+    Route::get('/video-tutorial/create', 'create')->name('video_tutorial.create');
+    Route::post('/video-tutorial/store', 'store')->name('video_tutorial.store');
+    Route::get('/video-tutorial/edit/{id}', 'edit')->name('video_tutorial.edit');
+    Route::post('/video-tutorial/update/{id}', 'update')->name('video_tutorial.update');
+    Route::get('/video-tutorial/status/{id}', 'status')->name('video_tutorial.status');
+    Route::delete('/video-tutorial/destroy/{id}', 'destroy')->name('video_tutorial.destroy');
 });

@@ -21,7 +21,7 @@ class SocialLoginController extends Controller
      */
     public function socialLogin(Request $request)
     {
-     
+
         $request->validate([
             'provider' => 'required|string|in:google,facebook,apple,github',
             'token'    => 'required|string',
@@ -85,15 +85,20 @@ class SocialLoginController extends Controller
             Log::error('Social Login Failed', [
                 'provider' => $provider,
                 'message'  => $e->getMessage(),
+                'trace'    => $e->getTraceAsString(),
             ]);
 
-            return $this->error(ucfirst($provider) . ' authentication failed.', 401);
+            return $this->error('Invalid credentials.', null, 401);
         }
     }
 
     /**
      * POST /api/login-with-user-id
      * Unique User ID দিয়ে সরাসরি লগইন
+     */
+    /**
+     * POST /api/login-with-user-id
+     * Unique User ID দিয়ে সরাসরি লগইন
      */
     public function loginWithUserId(Request $request)
     {
@@ -103,18 +108,22 @@ class SocialLoginController extends Controller
 
         $user = User::where('user_id', $request->user_id)->first();
 
+        // ভ্যালিডেশনে already exists:users,user_id দেওয়া আছে,
+        // তাই ইউজার সাধারণত পাওয়া যাবেই, তবুও সেফটির জন্য চেক রাখা ভালো
         if (!$user) {
-            return $this->error('Invalid User ID.', 404);
+            return $this->error('Invalid User ID.', null, 404);
         }
 
-        // টোকেন তৈরি
+        // আগের Sanctum Token মুছে নতুন টোকেন ইস্যু করা
+        $user->tokens()->where('name', 'UserIdAuth')->delete();
         $plainToken = $user->createToken('UserIdAuth')->plainTextToken;
 
+        // ট্রেইট ব্যবহার করে রেসপন্স রিটার্ন
         return $this->success('Login successful via User ID.', [
             'token_type' => 'Bearer',
             'token'      => $plainToken,
             'user'       => $user,
-        ]);
+        ], 200);
     }
 
     /**
@@ -128,5 +137,26 @@ class SocialLoginController extends Controller
         } while (User::where('user_id', $userId)->exists());
 
         return $userId;
+    }
+
+    public function completeOnboarding(Request $request)
+    {
+
+        $validated = $request->validate([
+            'is_18_plus' => 'required|boolean',
+            'gender'     => 'required|string|in:male,female,other',
+            'background' => 'required|string|max:100', // e.g., asian, african, blackasian
+        ]);
+
+        $user = $request->user();
+        $user->update([
+            'is_18_plus' => $validated['is_18_plus'],
+            'gender'     => $validated['gender'],
+            'background' => $validated['background'],
+        ]);
+
+        return $this->success('Onboarding completed successfully.', [
+            'user' => $user,
+        ]);
     }
 }
