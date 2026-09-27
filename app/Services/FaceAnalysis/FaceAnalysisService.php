@@ -14,10 +14,14 @@ class FaceAnalysisService
     public function __construct(
         protected GeminiVisionService $gemini,
         protected FaceScanRepositoryInterface $faceScans,
+        protected FaceScanReportService $reportService,
     ) {
     }
 
-    public function analyze(int $userId, UploadedFile $front, ?UploadedFile $side = null): FaceScan
+    // generateCard() intentionally lives in FaceAnalysisController, not here —
+    // it needs Request/auth context, which the service layer shouldn't touch.
+
+    public function analyze(int $userId, UploadedFile $front, ?UploadedFile $side = null, bool $detailed = false): FaceScan
     {
         $frontPath = $front->store('face-scans', 'public');
         $sidePath  = $side?->store('face-scans', 'public');
@@ -36,21 +40,29 @@ class FaceAnalysisService
                 $images['side'] = Storage::disk('public')->path($sidePath);
             }
 
-            $analysis = $this->gemini->analyzeFace($images);
+            $analysis = $this->gemini->analyzeFace($images, $detailed);
 
-            return $this->faceScans->update($scan, [
+            $scan = $this->faceScans->update($scan, [
                 'harmony_score'             => $analysis['harmony_score'],
                 'symmetry'                  => $analysis['symmetry'],
                 'jawline'                   => $analysis['jawline'],
                 'cheekbones'                => $analysis['cheekbones'],
                 'nose'                      => $analysis['nose'],
                 'skin_quality'              => $analysis['skin_quality'],
+                'angularity'                => $analysis['angularity'],
+                'dimorphism'                => $analysis['dimorphism'],
                 'facial_width_height_ratio' => $analysis['facial_width_height_ratio'] ?? null,
                 'key_strengths'             => $analysis['key_strengths'],
                 'regions'                   => $analysis['regions'] ?? [],
+                'front_regions'             => $analysis['front_regions'] ?? null,
+                'side_regions'              => $analysis['side_regions'] ?? null,
                 'summary'                   => $analysis['summary'],
                 'status'                    => 'processed',
             ]);
+
+            $reportPath = $this->reportService->generate($scan);
+
+            return $this->faceScans->update($scan, ['report_pdf_path' => $reportPath]);
         } catch (Throwable $e) {
             $this->faceScans->update($scan, ['status' => 'failed']);
 

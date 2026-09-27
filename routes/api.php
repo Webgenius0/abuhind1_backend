@@ -60,6 +60,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::post('/face-scan', [FaceAnalysisController::class, 'store']);
+    Route::get('/face-scan/{faceScan}', [FaceAnalysisController::class, 'show']);
+    Route::get('/face-scan/{faceScan}/analyze', [FaceAnalysisController::class, 'analyze']);
+    Route::post('/face-scan/{faceScan}/card', [FaceAnalysisController::class, 'generateCard']);
     Route::get('/pages', [DynamicPageApiController::class, 'index']);
     Route::get('/pages/{slug}', [DynamicPageApiController::class, 'show']);
     Route::get('/video-tutorials', [VideoTutorialController::class, 'index']);

@@ -33,6 +33,8 @@ class User extends Authenticatable
         'provider_id',
         'provider_token',
         'role',
+        'is_premium',
+        'premium_expires_at',
     ];
 
     /**
@@ -61,6 +63,16 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_premium' => 'boolean',
+            'premium_expires_at' => 'datetime',
         ];
+    }
+    public function isPremium(): bool
+    {
+        if (! $this->is_premium) {
+            return false;
+        }
+
+        return $this->premium_expires_at === null || $this->premium_expires_at->isFuture();
     }
 }

@@ -18,10 +18,15 @@ return new class () extends Migration {
             $table->decimal('cheekbones', 4, 2)->nullable();
             $table->decimal('nose', 4, 2)->nullable();
             $table->decimal('skin_quality', 4, 2)->nullable();
+            $table->decimal('angularity', 4, 2)->nullable();
+            $table->decimal('dimorphism', 4, 2)->nullable();
             $table->decimal('facial_width_height_ratio', 4, 2)->nullable();
             $table->json('key_strengths')->nullable();
             $table->json('regions')->nullable();
+            $table->json('front_regions')->nullable();
+            $table->json('side_regions')->nullable();
             $table->text('summary')->nullable();
+            $table->string('report_pdf_path')->nullable();
             $table->string('status')->default('pending'); // pending|processed|failed
             $table->timestamps();
         });

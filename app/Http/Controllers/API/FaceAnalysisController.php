@@ -3,15 +3,21 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Repositories\Contracts\FaceScanRepositoryInterface;
 use App\Services\FaceAnalysis\FaceAnalysisService;
+use App\Services\FaceAnalysis\FaceCardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use App\Http\Resources\FaceScanResource;
+use App\Http\Resources\FaceScanRegionsResource;
 
 class FaceAnalysisController extends Controller
 {
     public function __construct(
-        protected FaceAnalysisService $faceAnalysisService
+        protected FaceAnalysisService $faceAnalysisService,
+        protected FaceScanRepositoryInterface $faceScans,
+        protected FaceCardService $cardService,
     ) {
     }
 
@@ -32,16 +38,57 @@ class FaceAnalysisController extends Controller
         $userId = $request->user()->id;
 
         // 3. Service call kore analysis kora
+        // $faceScan = $this->faceAnalysisService->analyze(
+        //     userId: $userId,
+        //     front: $request->file('front'),
+        //     side: $request->file('side')
+        // );
         $faceScan = $this->faceAnalysisService->analyze(
             userId: $userId,
             front: $request->file('front'),
-            side: $request->file('side')
+            side: $request->file('side'),
+            detailed: true,
         );
-
         // 4. Response return kora
         return response()->json([
             'message' => 'Face analysis completed successfully.',
             'data'    => $faceScan,
         ], 201);
+    }
+    public function generateCard(Request $request, int $faceScan): JsonResponse
+    {
+        $scan = $this->faceScans->findOrFail($faceScan);
+
+        abort_unless($scan->user_id === $request->user()->id, 403);
+        abort_unless($scan->status === 'processed', 422, 'Scan is not ready yet.');
+
+        $card = $this->cardService->generate($scan);
+
+        return response()->json([
+            'message' => 'Card generated.',
+            'data'    => $card,
+        ], 201);
+    }
+    public function show(Request $request, int $faceScan): JsonResponse
+    {
+        $scan = $this->faceScans->findOrFail($faceScan);
+
+        abort_unless($scan->user_id === $request->user()->id, 403);
+
+        return response()->json([
+            'message' => 'Face scan details.',
+            'data'    => new FaceScanResource($scan),
+        ]);
+    }
+    public function analyze(Request $request, int $faceScan): JsonResponse
+    {
+        $scan = $this->faceScans->findOrFail($faceScan);
+
+        abort_unless($scan->user_id === $request->user()->id, 403);
+
+        return response()->json([
+            'message' => 'Face region analysis.',
+            'data'    => new FaceScanRegionsResource($scan),
+        ]);
     }
 }

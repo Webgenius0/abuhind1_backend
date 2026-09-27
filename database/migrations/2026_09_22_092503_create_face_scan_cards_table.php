@@ -12,8 +12,10 @@ return new class () extends Migration {
             $table->foreignId('face_scan_id')->constrained()->cascadeOnDelete();
             $table->decimal('harmony', 4, 2);
             $table->decimal('features', 4, 2);
-            $table->decimal('originality', 4, 2);
-            $table->decimal('description', 4, 2);
+
+            $table->decimal('angularity', 4, 2);
+            $table->decimal('dimorphism', 4, 2);
+            $table->decimal('overall', 4, 2);
             $table->string('image_path')->nullable();
             $table->string('pdf_path')->nullable();
             $table->timestamps();

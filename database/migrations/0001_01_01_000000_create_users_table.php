@@ -23,7 +23,8 @@ return new class () extends Migration {
             $table->string('provider_id')->nullable();
             $table->text('provider_token')->nullable();
             $table->string('role')->default('User');
-
+            $table->boolean('is_premium')->default(false);
+            $table->timestamp('premium_expires_at')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable(); // পাসওয়ার্ড নাল-এবল রাখা হলো
             $table->rememberToken();
