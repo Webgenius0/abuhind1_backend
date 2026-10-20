@@ -15,5 +15,7 @@ interface FaceScanRepositoryInterface
 
     public function forUser(int $userId): Collection;
 
+    public function countForUser(int $userId): int;
+
     public function update(FaceScan $scan, array $attributes): FaceScan;
 }

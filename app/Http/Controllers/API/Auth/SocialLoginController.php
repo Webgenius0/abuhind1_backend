@@ -117,7 +117,7 @@ class SocialLoginController extends Controller
         // আগের Sanctum Token মুছে নতুন টোকেন ইস্যু করা
         $user->tokens()->where('name', 'UserIdAuth')->delete();
         $plainToken = $user->createToken('UserIdAuth')->plainTextToken;
-
+        $user->setAttribute('onboarding_completed', $user->onboarding_completed);
         // ট্রেইট ব্যবহার করে রেসপন্স রিটার্ন
         return $this->success('Login successful via User ID.', [
             'token_type' => 'Bearer',

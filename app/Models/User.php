@@ -58,6 +58,7 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
+    protected $appends = ['onboarding_completed'];
     protected function casts(): array
     {
         return [
@@ -66,6 +67,13 @@ class User extends Authenticatable
             'is_premium' => 'boolean',
             'premium_expires_at' => 'datetime',
         ];
+    }
+
+    public function getOnboardingCompletedAttribute(): bool
+    {
+        return  $this->is_18_plus
+            && ! is_null($this->gender)
+            && ! is_null($this->background);
     }
     public function isPremium(): bool
     {

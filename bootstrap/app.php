@@ -3,6 +3,9 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -25,5 +28,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
+            if ($request->is('api/*')) {
+                $message = $e->getPrevious() instanceof ModelNotFoundException
+                    ? 'The requested record was not found.'
+                    : 'Endpoint not found.';
+
+                return response()->json([
+                    'message' => $message,
+                    'data'    => null,
+                ], 404);
+            }
+        });
     })->create();

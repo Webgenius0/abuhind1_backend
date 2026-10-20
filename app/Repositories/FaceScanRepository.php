@@ -27,6 +27,12 @@ class FaceScanRepository implements FaceScanRepositoryInterface
     {
         return FaceScan::where('user_id', $userId)->latest()->get();
     }
+    public function countForUser(int $userId): int
+    {
+        return FaceScan::where('user_id', $userId)
+            ->where('status', '!=', 'pending')
+            ->count();
+    }
 
     public function update(FaceScan $scan, array $attributes): FaceScan
     {

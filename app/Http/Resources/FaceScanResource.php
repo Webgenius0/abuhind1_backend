@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\Grade;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
@@ -10,14 +11,21 @@ class FaceScanResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $features = ($this->jawline !== null && $this->cheekbones !== null && $this->nose !== null)
-            ? round(($this->jawline + $this->cheekbones + $this->nose) / 3, 1)
-            : null;
+        // $features = ($this->jawline !== null && $this->cheekbones !== null && $this->nose !== null)
+        //     ? round(($this->jawline + $this->cheekbones + $this->nose) / 3, 1)
+        //     : null;
 
-        $overallScore = ($this->harmony_score !== null && $features !== null
-                && $this->angularity !== null && $this->dimorphism !== null)
-            ? round(($this->harmony_score + $features + $this->angularity + $this->dimorphism) / 4, 1)
-            : null;
+        // $overallScore = ($this->harmony_score !== null && $features !== null
+        //         && $this->angularity !== null && $this->dimorphism !== null)
+        //     ? round(($this->harmony_score + $features + $this->angularity + $this->dimorphism) / 4, 1)
+        //     : null;
+        $overallScore = $this->overall_score !== null
+            ? (float) $this->overall_score
+            : $this->calculateOverall();
+        $withGrade = fn (?array $rows) => $rows === null ? null : array_map(
+            fn ($row) => $row + ['grade' => Grade::from($row['score'] ?? null)],
+            $rows
+        );
 
         return [
             'id'              => $this->id,
@@ -26,20 +34,29 @@ class FaceScanResource extends JsonResource
             'side_image_url'  => $this->side_image_path ? Storage::disk('public')->url($this->side_image_path) : null,
 
             'harmony_score' => $this->harmony_score,
+            'harmony_grade' => Grade::from($this->harmony_score),
             'symmetry'      => $this->symmetry,
+            'symmetry_grade' => Grade::from($this->symmetry),
             'jawline'       => $this->jawline,
+            'jawline_grade' => Grade::from($this->jawline),
             'cheekbones'    => $this->cheekbones,
+            'cheekbones_grade' => Grade::from($this->cheekbones),
             'nose'          => $this->nose,
+            'nose_grade'    => Grade::from($this->nose),
             'skin_quality'  => $this->skin_quality,
+            'skin_quality_grade' => Grade::from($this->skin_quality),
             'angularity'    => $this->angularity,
+            'angularity_grade' => Grade::from($this->angularity),
             'dimorphism'    => $this->dimorphism,
-            'overall_score' => $overallScore,
+            'dimorphism_grade' => Grade::from($this->dimorphism),
 
-            'facial_width_height_ratio' => $this->facial_width_height_ratio,
-            'key_strengths'             => $this->key_strengths,
-            'regions'                   => $this->regions,
-            'front_regions'             => $this->front_regions,
-            'side_regions'              => $this->side_regions,
+            'overall_score' => $overallScore,
+            'overall_grade' => Grade::from($overallScore),
+
+            'key_strengths' => $withGrade($this->key_strengths),
+            'regions'       => $withGrade($this->regions),
+            'front_regions' => $withGrade($this->front_regions),
+            'side_regions'  => $withGrade($this->side_regions),
             'summary'                   => $this->summary,
             'report_pdf_url'            => $this->report_pdf_url,
 

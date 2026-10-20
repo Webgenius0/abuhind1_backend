@@ -55,6 +55,7 @@ class LoginController extends Controller
         }
 
         $token = $this->authService->generateToken($user);
+
         $user->setAttribute('token', $token);
 
         return $this->success($user, 'User authenticated successfully', 200);

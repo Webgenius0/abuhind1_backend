@@ -29,9 +29,14 @@ class FaceScan extends Model
         'regions',
         'front_regions',
         'side_regions',
+        'metrics',
         'summary',
         'report_pdf_path',
         'status',
+        'report_pdf_path',
+        'status',
+        'overall_score',
+        'score_version',
     ];
 
     protected $casts = [
@@ -48,6 +53,8 @@ class FaceScan extends Model
         'facial_width_height_ratio' => 'float',
         'front_regions'             => 'array',
         'side_regions'              => 'array',
+        'metrics'                   => 'array',
+        'overall_score' => 'float',
     ];
 
     protected $appends = ['report_pdf_url'];
@@ -65,5 +72,25 @@ class FaceScan extends Model
     public function getReportPdfUrlAttribute(): ?string
     {
         return $this->report_pdf_path ? Storage::disk('public')->url($this->report_pdf_path) : null;
+    }
+    public function calculateFeatures(): ?float
+    {
+        if ($this->jawline === null || $this->cheekbones === null || $this->nose === null) {
+            return null;
+        }
+
+        return round(($this->jawline + $this->cheekbones + $this->nose) / 3, 1);
+    }
+
+    public function calculateOverall(): ?float
+    {
+        $features = $this->calculateFeatures();
+
+        if ($this->harmony_score === null || $features === null
+            || $this->angularity === null || $this->dimorphism === null) {
+            return null;
+        }
+
+        return round(($this->harmony_score + $features + $this->angularity + $this->dimorphism) / 4, 1);
     }
 }

@@ -25,9 +25,12 @@ return new class () extends Migration {
             $table->json('regions')->nullable();
             $table->json('front_regions')->nullable();
             $table->json('side_regions')->nullable();
+            $table->json('metrics')->nullable();
             $table->text('summary')->nullable();
             $table->string('report_pdf_path')->nullable();
             $table->string('status')->default('pending'); // pending|processed|failed
+            $table->decimal('overall_score', 4, 2)->nullable()->index();
+            $table->string('score_version', 20)->nullable()->index();
             $table->timestamps();
         });
     }

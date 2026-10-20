@@ -2,18 +2,6 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Third Party Services
-    |--------------------------------------------------------------------------
-    |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
-    |
-    */
-
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
@@ -29,7 +17,7 @@ return [
     ],
      'gemini' => [
         'key' => env('GEMINI_API_KEY'),
-        'model' => env('GEMINI_MODEL', 'gemini-1.5-pro'),
+        'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
         'base' => env(
             'GEMINI_API_BASE',
             'https://generativelanguage.googleapis.com/v1beta'

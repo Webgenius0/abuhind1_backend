@@ -5,71 +5,66 @@ use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\SocialLoginController;
 use App\Http\Controllers\Api\DynamicPageApiController;
 use App\Http\Controllers\Api\FaceAnalysisController;
-use App\Http\Controllers\Api\SocialAuthController;
+use App\Http\Controllers\Api\FaceMetricController;
+use App\Http\Controllers\Api\PremiumController;
 use App\Http\Controllers\Api\SocialMediaController;
 use App\Http\Controllers\Api\SystemSettingController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\VideoTutorialController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
+/*
+|--------------------------------------------------------------------------
+| Guest routes
+|--------------------------------------------------------------------------
+*/
 
-// Route::post('/social-login', [SocialAuthController::class, 'socialLogin']);
 Route::post('/social-login', [SocialLoginController::class, 'socialLogin']);
 Route::post('/login-with-user-id', [SocialLoginController::class, 'loginWithUserId']);
 
+Route::get('/pages', [DynamicPageApiController::class, 'index']);
+Route::get('/pages/{slug}', [DynamicPageApiController::class, 'show']);
+
 Route::controller(RegisterController::class)->prefix('users/register')->group(function () {
-    // User Register
     Route::post('/', 'userRegister');
-
-    // Verify OTP
     Route::post('/otp-verify', 'otpVerify');
-
-    // Resend OTP
     Route::post('/otp-resend', 'otpResend');
-    //email exists check
     Route::post('/email-exists', 'emailExists');
 });
+
 Route::controller(LoginController::class)->prefix('users/login')->group(function () {
-
-    // User Login
     Route::post('/', 'userLogin');
-
-    // Verify Email
     Route::post('/email-verify', 'emailVerify');
-
-    // Resend OTP
     Route::post('/otp-resend', 'otpResend');
-
-    // Verify OTP
     Route::post('/otp-verify', 'otpVerify');
-
-    //Reset Password
     Route::post('/reset-password', 'resetPassword');
 });
 
-
+/*
+|--------------------------------------------------------------------------
+| Authenticated routes
+|--------------------------------------------------------------------------
+*/
 
 Route::middleware('auth:sanctum')->group(function () {
+
+    // System settings
     Route::controller(SystemSettingController::class)->group(function () {
         Route::get('/site-settings', 'index');
     });
 
-
-    Route::post('/face-scan', [FaceAnalysisController::class, 'store']);
-    Route::get('/face-scan/{faceScan}', [FaceAnalysisController::class, 'show']);
-    Route::get('/face-scan/{faceScan}/analyze', [FaceAnalysisController::class, 'analyze']);
-    Route::post('/face-scan/{faceScan}/card', [FaceAnalysisController::class, 'generateCard']);
-    Route::get('/pages', [DynamicPageApiController::class, 'index']);
-    Route::get('/pages/{slug}', [DynamicPageApiController::class, 'show']);
-    Route::get('/video-tutorials', [VideoTutorialController::class, 'index']);
+    // Social media links
     Route::controller(SocialMediaController::class)->group(function () {
         Route::get('/social-links', 'index');
     });
-    Route::prefix('user')->controller(UserController::class)->group(function () {
+
+    // Video tutorials
+    Route::controller(VideoTutorialController::class)->group(function () {
+        Route::get('/video-tutorials', 'index');
+    });
+
+    // User account
+    Route::controller(UserController::class)->prefix('user')->group(function () {
         Route::get('/', 'userDetails');
         Route::post('/update', 'updateUser');
         Route::post('/update-password', 'updatePassword');
@@ -77,5 +72,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', 'logoutUser');
         Route::post('/onboarding', [SocialLoginController::class, 'completeOnboarding']);
     });
+
+    // Face scan — analysis, overview, card, region breakdown
+    // NOTE: '/face-scan/my-scans' must stay above '/face-scan/{faceScan}',
+    // otherwise Laravel matches it as {faceScan} = "my-scans".
+    Route::controller(FaceAnalysisController::class)->prefix('face-scan')->group(function () {
+        Route::post('/', 'store');
+        Route::get('/my-scans', 'myScans');
+        Route::get('/{faceScan}', 'show');
+        Route::get('/{faceScan}/analyze', 'analyze');
+        Route::post('/{faceScan}/card', 'generateCard');
+        Route::get('/{faceScan}/comparison', 'comparison');
+    });
+
+    // Face scan — per-metric detail modal
+    Route::controller(FaceMetricController::class)->prefix('face-scan/{faceScan}/metrics')->group(function () {
+        Route::get('/', 'index');
+        Route::get('/{key}', 'show');
+    });
+    Route::post('/premium/redeem', [PremiumController::class, 'redeem'])->middleware('throttle:5,1');
+    Route::get('/premium/history', [PremiumController::class, 'history']);
 
 });

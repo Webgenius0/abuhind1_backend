@@ -109,59 +109,33 @@
                            </li>
                        </ul>
                    </li>
-                   {{--
-                   <li class="sidebar-list"><i class="fa fa-thumb-tack"></i><a class="sidebar-link sidebar-title"
+                   <li class="sidebar-list">
+                       <i class="fa fa-star"></i>
+                       <a class="sidebar-link sidebar-title {{ request()->routeIs('admin.premium_code.*') ? 'active' : '' }}"
                            href="#">
                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                               fill="none" stroke="#fefbfb" stroke-width="1" stroke-linecap="round"
+                               fill="none" stroke="#ffffff" stroke-width="1" stroke-linecap="round"
                                stroke-linejoin="round">
-                               <path
-                                   d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" />
-                               <path d="M12 4l0 16" />
+                               <circle cx="12" cy="12" r="9"></circle>
+                               <path d="M12 8v4l2 2"></path>
                            </svg>
-
-
-                           <span class="lan-7">Page layout</span></a>
-                       <ul class="sidebar-submenu">
-                           <li><a href="box-layout.html">Boxed</a></li>
-                           <li><a href="layout-rtl.html">RTL</a></li>
-                           <li><a href="layout-dark.html">Dark Layout</a></li>
-                           <li> <a href="hide-on-scroll.html">Hide Nav Scroll</a></li>
+                           <span>Premium Codes</span>
+                       </a>
+                       <ul class="sidebar-submenu {{ request()->routeIs('admin.premium_code.*') ? 'd-block' : '' }}">
+                           <li>
+                               <a class="{{ request()->routeIs('admin.premium_code.*') ? 'active' : '' }}"
+                                   href="{{ route('admin.premium_code.index') }}">
+                                   Premium Codes
+                               </a>
+                           </li>
                        </ul>
-                   </li> --}}
+                   </li>
+                
                    <li class="sidebar-main-title">
                        <div>
                            <h6 class="lan-8">Applications</h6>
                        </div>
                    </li>
-                   {{-- <li class="sidebar-list">
-                       <i class="fa fa-thumb-tack"></i>
-                       <a class="sidebar-link sidebar-title {{ request()->routeIs('admin.blogs.*') ? 'active' : '' }}"
-                           href="#">
-                           <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                               fill="none" stroke="#ffffff" stroke-width="1" stroke-linecap="round"
-                               stroke-linejoin="round">
-                               <path
-                                   d="M3 9a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-9z" />
-                               <path d="M8 7v-2a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v2" />
-                           </svg>
-                           <span>Blogs</span>
-                       </a>
-                       <ul class="sidebar-submenu {{ request()->routeIs('admin.blogs.*') ? 'd-block' : '' }}">
-                           <li>
-                               <a class="{{ request()->routeIs('admin.blogs.index') ? 'active' : '' }}"
-                                   href="{{ route('admin.blogs.index') }}">
-                                   Blog List
-                               </a>
-                           </li>
-                           <li>
-                               <a class="{{ request()->is('admin/blogs/list-view') ? 'active' : '' }}"
-                                   href="job-list-view.html">
-                                   List View
-                               </a>
-                           </li>
-                       </ul>
-                   </li> --}}
                </ul>
                <div class="right-arrow" id="right-arrow"><i data-feather="arrow-right"></i></div>
            </div>

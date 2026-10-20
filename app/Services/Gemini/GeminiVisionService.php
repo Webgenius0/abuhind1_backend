@@ -106,6 +106,9 @@ class GeminiVisionService
                 return an empty array for "side_regions".
                 PROMPT;
         }
+        $base .= "\n\nLanguage: write every free-text string value (summary, key_strengths labels, "
+            ."regions names and notes) in Arabic as used in Saudi Arabia. Keep all JSON keys, "
+            ."metric keys and enum values exactly as specified, in English. Use Western digits (0-9).";
 
         $base .= "\n\nReturn ONLY data that matches the provided JSON schema, no extra commentary.";
 

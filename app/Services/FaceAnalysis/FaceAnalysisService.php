@@ -58,8 +58,12 @@ class FaceAnalysisService
                 'side_regions'              => $analysis['side_regions'] ?? null,
                 'summary'                   => $analysis['summary'],
                 'status'                    => 'processed',
-            ]);
 
+            ]);
+            $scan->update([
+                'overall_score' => $scan->calculateOverall(),
+                'score_version' => config('scoring.version'),
+            ]);
             $reportPath = $this->reportService->generate($scan);
 
             return $this->faceScans->update($scan, ['report_pdf_path' => $reportPath]);

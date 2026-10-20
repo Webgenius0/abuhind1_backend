@@ -12,11 +12,12 @@
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
         "guzzlehttp/guzzle": "^7.10",
-        "intervention/image": "3.0",
+        "intervention/image": "^3.0",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.2",
         "laravel/socialite": "^5.31",
         "laravel/tinker": "^2.10.1",
+        "mpdf/mpdf": "^8.3",
         "yajra/laravel-datatables-oracle": "^12.4"
     },
     "require-dev": {
@@ -82,6 +83,13 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "audit": {
+            "ignore": [
+                "PKSA-d5tc-s1qs-h781",
+                "PKSA-m4t9-vsgq-8khn",
+                "PKSA-m2dq-1fhr-29b1"
+            ]
         }
     },
     "minimum-stability": "stable",

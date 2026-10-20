@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\BlogController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Web\Backend\DashBoardController;
 use App\Http\Controllers\Web\Backend\DynamicPageController;
+use App\Http\Controllers\Web\Backend\PremiumCodeController;
 use App\Http\Controllers\Web\Backend\ProfileController;
 use App\Http\Controllers\Web\Backend\SocialMediaController;
 use App\Http\Controllers\Web\Backend\SystemSettingController;
@@ -46,4 +47,10 @@ Route::controller(VideoTutorialController::class)->group(function () {
     Route::post('/video-tutorial/update/{id}', 'update')->name('video_tutorial.update');
     Route::get('/video-tutorial/status/{id}', 'status')->name('video_tutorial.status');
     Route::delete('/video-tutorial/destroy/{id}', 'destroy')->name('video_tutorial.destroy');
+});
+Route::controller(PremiumCodeController::class)->prefix('premium-code')->name('premium_code.')->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::get('/create', 'create')->name('create');
+    Route::post('/', 'store')->name('store');
+    Route::delete('/{id}', 'destroy')->name('destroy');
 });
