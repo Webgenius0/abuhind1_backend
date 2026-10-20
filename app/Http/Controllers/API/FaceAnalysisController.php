@@ -115,9 +115,9 @@ class FaceAnalysisController extends Controller
     {
         $scan = $this->faceScans->findOrFail($faceScan);
 
-        abort_unless($scan->user_id === $request->user()->id, 403);
-        abort_unless($scan->status === 'processed', 422, 'Scan is not ready yet.');
+        abort_unless($scan->user_id === $request->user()->id, 403, __('api.unauthorized'));
+        abort_unless($scan->status === 'processed', 422, __('api.scan_not_ready'));
 
-        return $this->success('Score comparison.', $percentiles->for($scan), 200);
+        return $this->success(__('api.score_comparison'), $percentiles->for($scan), 200);
     }
 }

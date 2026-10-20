@@ -53,22 +53,41 @@ class UserController extends Controller
         $user = Auth::user();
 
         $validator = Validator::make($request->all(), [
-            'name'   => 'sometimes|nullable|string|max:255',
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:20480',
+            'name'           => 'sometimes|nullable|string|max:255',
+            'avatar'         => 'nullable|image|mimes:jpeg,png,jpg,svg|max:20480',
+            'gender'         => 'sometimes|nullable|string|max:50',
+            'background'     => 'sometimes|nullable|string|max:255',
+            'is_18_plus'     => 'sometimes|boolean',
+            'agree_to_terms' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {
-            return $this->error($validator->errors(), 'Validation Error', 422);
+            return $this->error('Validation Error', $validator->errors(), 422);
         }
+
         if ($request->filled('name')) {
             $user->name = $request->name;
         }
+
         if ($request->hasFile('avatar')) {
             $user->avatar = $this->avatarService->upload($request->file('avatar'));
         }
+
+        foreach (['gender', 'background'] as $field) {
+            if ($request->has($field)) {
+                $user->{$field} = $request->input($field);
+            }
+        }
+
+        foreach (['is_18_plus', 'agree_to_terms'] as $field) {
+            if ($request->has($field)) {
+                $user->{$field} = $request->boolean($field);
+            }
+        }
+
         $user->save();
 
-        return $this->success($user, 'Profile updated successfully', 200);
+        return $this->success('Profile updated successfully', $user->fresh(), 200);
     }
 
     public function updatePassword(Request $request)

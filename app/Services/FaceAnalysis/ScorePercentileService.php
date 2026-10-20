@@ -9,9 +9,8 @@ class ScorePercentileService
     public function for(FaceScan $scan): array
     {
         $version = $scan->score_version ?? config('scoring.version');
-        $min     = config('scoring.min_sample');
+        $min     = (int) config('scoring.min_sample');
 
-        // প্রতি ইউজারের সর্বশেষ সফল scan, শুধু এই version-এর
         $base = FaceScan::query()
             ->whereNotNull('overall_score')
             ->whereIn('id', fn ($q) => $q->selectRaw('MAX(id)')
@@ -27,25 +26,46 @@ class ScorePercentileService
                 'available'    => false,
                 'sample_size'  => $total,
                 'min_required' => $min,
-                'population'   => 'Malameh users',
+                'population'   => __('api.population'),
+                'message'      => __('api.not_enough_data', ['count' => $total, 'min' => $min]),
             ];
         }
 
-        $below = (clone $base)->where('overall_score', '<', $scan->overall_score)->count();
+        $score = (float) $scan->overall_score;
 
-        $histogram = (clone $base)
-            ->selectRaw('FLOOR(overall_score * 2) / 2 as bin, COUNT(*) as n')
-            ->groupBy('bin')->orderBy('bin')
-            ->get()
-            ->map(fn ($r) => ['from' => (float) $r->bin, 'to' => (float) $r->bin + 0.5, 'count' => (int) $r->n])
-            ->values();
+        $below = (clone $base)->where('overall_score', '<', $score)->count();
+        $equal = (clone $base)->where('overall_score', $score)->count();
+
+        $percentile = (int) round(($below + 0.5 * $equal) / $total * 100);
+        $percentile = max(1, min(99, $percentile));
+        $top        = 100 - $percentile;
+
+        $summary = match (true) {
+            $top <= 10 => __('api.band_top', ['top' => $top]),
+            $top <= 30 => __('api.band_high', ['top' => $top]),
+            $top <= 70 => __('api.band_average'),
+            default    => __('api.band_low'),
+        };
+
+        $counts = (clone $base)
+            ->selectRaw('LEAST(FLOOR(overall_score * 2), 19) as bin, COUNT(*) as n')
+            ->groupBy('bin')
+            ->pluck('n', 'bin');
+
+        $histogram = collect(range(0, 19))->map(fn ($i) => [
+            'from'  => $i / 2,
+            'to'    => ($i + 1) / 2,
+            'count' => (int) ($counts[$i] ?? 0),
+        ])->values();
 
         return [
             'available'   => true,
-            'population'  => 'Malameh users',
+            'population'  => __('api.population'),
             'sample_size' => $total,
-            'user_score'  => (float) $scan->overall_score,
-            'percentile'  => (int) round($below / $total * 100),
+            'user_score'  => $score,
+            'percentile'  => $percentile,
+            'top_percent' => $top,
+            'summary'     => $summary,
             'histogram'   => $histogram,
         ];
     }
