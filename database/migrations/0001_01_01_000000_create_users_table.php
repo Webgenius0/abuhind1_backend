@@ -23,6 +23,7 @@ return new class() extends Migration {
             $table->string('provider_id')->nullable();
             $table->text('provider_token')->nullable();
             $table->string('role')->default('User');
+            $table->enum('status', ['active', 'inactive', 'suspended', 'blocked'])->default('active');
             $table->boolean('is_premium')->default(false);
             $table->timestamp('premium_expires_at')->nullable();
             $table->timestamp('email_verified_at')->nullable();

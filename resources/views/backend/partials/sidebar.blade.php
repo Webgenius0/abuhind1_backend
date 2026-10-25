@@ -147,15 +147,9 @@
                            </li>
                        </ul>
                    </li>
-                
-                   <li class="sidebar-main-title">
-                       <div>
-                           <h6 class="lan-8">Applications</h6>
-                       </div>
-                   </li>
-               </ul>
-               <div class="right-arrow" id="right-arrow"><i data-feather="arrow-right"></i></div>
-           </div>
-       </nav>
+                </ul>
+                <div class="right-arrow" id="right-arrow"><i data-feather="arrow-right"></i></div>
+            </div>
+        </nav>
    </div>
    <!-- Page Sidebar Ends-->
