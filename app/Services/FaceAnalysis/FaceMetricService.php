@@ -27,7 +27,7 @@ class FaceMetricService
 
         $out = [];
 
-        // config-এর ক্রমই modal-এর ক্রম (1/33, 2/33 ...)
+        // Configuration order dictates modal display sequence (e.g., 1/33, 2/33)
         foreach (config('face_metrics', []) as $key => $m) {
             if (! isset($stored[$key])) {
                 continue;
@@ -80,7 +80,7 @@ class FaceMetricService
         return $stored;
     }
 
-    /** ideal range-এর ভেতরে হলে 10, বাইরে গেলে scale-এর প্রান্তের দিকে ধীরে ০-তে নামে */
+    /** Returns 10 if within ideal range, tapering down toward 0 at scale boundaries */
     protected function score(float $value, array $m): float
     {
         $min = (float) ($m['ideal_min'] ?? $value);

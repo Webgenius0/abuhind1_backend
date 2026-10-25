@@ -18,7 +18,7 @@ class FaceMetricController extends Controller
 
     public function index(Request $request, int $faceScan): JsonResponse
     {
-        set_time_limit(180); // প্রথমবার Gemini call হয়, তাই সময় লাগতে পারে
+        set_time_limit(180); // Initial Gemini API call may take additional processing time
 
         $items = $this->metrics->forScan($this->authorizedScan($request, $faceScan));
 

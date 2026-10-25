@@ -62,16 +62,16 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'is_premium' => 'boolean',
+            'email_verified_at'  => 'datetime',
+            'password'           => 'hashed',
+            'is_premium'         => 'boolean',
             'premium_expires_at' => 'datetime',
         ];
     }
 
     public function getOnboardingCompletedAttribute(): bool
     {
-        return  $this->is_18_plus
+        return $this->is_18_plus
             && ! is_null($this->gender)
             && ! is_null($this->background);
     }
