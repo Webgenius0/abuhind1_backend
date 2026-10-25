@@ -2,24 +2,44 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PremiumCode extends Model
 {
-    protected $fillable = [
-        'code', 'validity_days', 'code_expires_at', 'assigned_user_id',
-        'used_by', 'used_at', 'created_by', 'note',
-    ];
+    use HasFactory;
 
-    protected $casts = [
-        'validity_days'   => 'integer',
-        'code_expires_at' => 'datetime',
-        'used_at'         => 'datetime',
-    ];
+    // Table name
+    protected $table = 'premium_codes';
+
+    // The attributes that are mass assignable.
+    protected $guarded = [];
+
+    // The attributes that should be hidden for serialization.
+    protected $hidden = [];
 
     protected $appends = ['status'];
 
+    // The attributes that should be cast.
+    protected function casts(): array
+    {
+        return [
+            'id'               => 'integer',
+            'code'             => 'string',
+            'validity_days'    => 'integer',
+            'code_expires_at'  => 'datetime',
+            'assigned_user_id' => 'integer',
+            'used_by'          => 'integer',
+            'used_at'          => 'datetime',
+            'created_by'       => 'integer',
+            'note'             => 'string',
+            'created_at'       => 'datetime',
+            'updated_at'       => 'datetime',
+        ];
+    }
+
+    // Relationships and other model methods can be added here
     public function getStatusAttribute(): string
     {
         if ($this->used_at) {
@@ -33,6 +53,7 @@ class PremiumCode extends Model
         return 'unused';
     }
 
+    // scope to filter by status
     public function scopeWithStatus($query, ?string $status)
     {
         return match ($status) {
@@ -41,11 +62,12 @@ class PremiumCode extends Model
                 ->whereNotNull('code_expires_at')
                 ->where('code_expires_at', '<=', now()),
             'unused'  => $query->whereNull('used_at')
-                ->where(fn ($q) => $q->whereNull('code_expires_at')->orWhere('code_expires_at', '>', now())),
+                ->where(fn($q) => $q->whereNull('code_expires_at')->orWhere('code_expires_at', '>', now())),
             default   => $query,
         };
     }
 
+    // assign to user
     public function assignedUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_user_id');
