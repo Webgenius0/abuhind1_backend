@@ -13,7 +13,10 @@ class FaceScanRegionsResource extends JsonResource
         $isBlur = ! $request->user()->isPremium();
 
         $withGrade = fn (?array $rows) => $rows === null ? null : array_map(
-            fn ($row) => $row + ['grade' => Grade::from($row['score'] ?? null)],
+            fn ($row) => $row + [
+                'key'   => isset($row['metric']) ? \Illuminate\Support\Str::snake($row['metric']) : ($row['key'] ?? null),
+                'grade' => Grade::from($row['score'] ?? null),
+            ],
             $rows
         );
 
