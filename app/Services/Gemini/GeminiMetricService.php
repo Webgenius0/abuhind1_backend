@@ -5,12 +5,18 @@ namespace App\Services\Gemini;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
+/**
+ * AI-driven facial landmark measurement engine via Gemini Vision.
+ */
 class GeminiMetricService
 {
     protected string $apiKey;
     protected string $model;
     protected string $baseUrl;
 
+    /**
+     * Initialize Gemini API credentials and configuration.
+     */
     public function __construct()
     {
         $this->apiKey  = (string) config('services.gemini.key');
@@ -19,11 +25,14 @@ class GeminiMetricService
     }
 
     /**
+     * Measure raw facial geometric metrics from front and optional side photos.
+     *
      * @param  array<string, string>  $images  ['front' => path, 'side' => path (optional)]
-     * @return array<string, float>  metric key => measured value
+     * @return array<string, float>            metric key => measured value
      */
     public function measure(array $images): array
     {
+        // 1. Filter configured metrics based on available camera angles
         $hasSide = isset($images['side']);
 
         $metrics = collect(config('face_metrics', []))
@@ -33,6 +42,7 @@ class GeminiMetricService
             return [];
         }
 
+        // 2. Build measurement prompt with metric definitions and units
         $list = $metrics
             ->map(fn ($m, $key) => "- {$key} [".($m['view'] ?? 'front')."]: {$m['title']}"
                 .(! empty($m['unit']) ? " (unit: {$m['unit']})" : '')
@@ -46,6 +56,7 @@ class GeminiMetricService
             ."entry per listed key, using the key exactly as written. Base measurements only "
             ."on visible geometry.\n\n{$list}\n\nReturn ONLY JSON matching the schema.";
 
+        // 3. Prepare multimodal payload with base64 encoded images
         $parts = [['text' => $prompt]];
 
         foreach ($images as $label => $path) {
@@ -56,6 +67,7 @@ class GeminiMetricService
             ]];
         }
 
+        // 4. Request structured geometric measurements with deterministic temperature (0.0)
         $response = Http::timeout(120)
             ->withHeaders(['x-goog-api-key' => $this->apiKey])
             ->post("{$this->baseUrl}/models/{$this->model}:generateContent", [
@@ -79,7 +91,7 @@ class GeminiMetricService
                         ],
                         'required' => ['metrics'],
                     ],
-                    'temperature'     => 0.2,
+                    'temperature'     => 0.0,
                     'maxOutputTokens' => 4096,
                 ],
             ]);
@@ -88,6 +100,7 @@ class GeminiMetricService
             throw new RuntimeException('Gemini metric request failed: '.$response->body());
         }
 
+        // 5. Extract and map raw metric values
         $text = data_get($response->json(), 'candidates.0.content.parts.0.text');
 
         if (! $text) {
@@ -102,6 +115,9 @@ class GeminiMetricService
             ->all();
     }
 
+    /**
+     * Detect image MIME type based on file extension.
+     */
     protected function mimeType(string $path): string
     {
         return match (strtolower(pathinfo($path, PATHINFO_EXTENSION))) {
