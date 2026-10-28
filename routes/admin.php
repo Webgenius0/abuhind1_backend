@@ -60,5 +60,7 @@ Route::controller(PremiumCodeController::class)->prefix('premium-code')->name('p
     Route::get('/', 'index')->name('index');
     Route::get('/create', 'create')->name('create');
     Route::post('/', 'store')->name('store');
+    Route::get('/edit/{id}', 'edit')->name('edit');
+    Route::post('/update/{id}', 'update')->name('update');
     Route::delete('/{id}', 'destroy')->name('destroy');
 });

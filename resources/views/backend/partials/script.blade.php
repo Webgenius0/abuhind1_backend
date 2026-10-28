@@ -74,24 +74,24 @@
             console.error(error);
         });
 </script>
-@if (session('success'))
+@if (session('success') || session('t-success'))
     <script>
         Swal.fire({
             icon: 'success',
             title: 'Success!',
-            text: '{{ session('success') }}',
+            text: '{{ session('success') ?? session('t-success') }}',
             showConfirmButton: false,
             timer: 2000
         });
     </script>
 @endif
 
-@if (session('error'))
+@if (session('error') || session('t-error'))
     <script>
         Swal.fire({
             icon: 'error',
             title: 'Oops...',
-            text: '{{ session('error') }}',
+            text: '{{ session('error') ?? session('t-error') }}',
             confirmButtonColor: '#d33'
         });
     </script>
