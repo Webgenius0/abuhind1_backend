@@ -7,24 +7,35 @@ on:
 
 jobs:
   ftp-deploy:
-
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      - name: FTP Deploy
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          fetch-depth: 2
 
+      - name: FTP Deploy
+        id: ftp_deploy
+        continue-on-error: true
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftp
-
+          security: loose
+          log-level: verbose
+          server-dir: ${{ secrets.FTP_SERVER_DIR || '' }}
           exclude: |
             **/.git*
             **/.git*/**
             **/vendor/**
             **/node_modules/**
             **/.env
+
+      - name: Fallback Deploy via LFTP
+        if: steps.ftp_deploy.outcome == 'failure'
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y lftp
+          lftp -e "set net:timeout 60; set net:max-retries 3; set ftp:ssl-allow yes; set ssl:verify-certificate no; set ftp:passive-mode true; open -u '${{ secrets.FTP_USERNAME }}','${{ secrets.FTP_PASSWORD }}' '${{ secrets.FTP_SERVER }}'; mirror -R --verbose --exclude-glob .git* --exclude-glob vendor/ --exclude-glob node_modules/ --exclude-glob .env ./ ${{ secrets.FTP_SERVER_DIR || '' }}; quit"
