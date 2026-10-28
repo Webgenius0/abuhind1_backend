@@ -2,49 +2,77 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        // Normal User
-        User::create([
-         'user_id'           => 'USR-LYB6PP',
-         'name'              => 'User',
-         'email'             => 'user@user.com',
-         'password'          => Hash::make('12345678'),
-         'email_verified_at' => Carbon::now(),
-         'is_18_plus'        => true,
-         'gender'            => 'Male',
-         'background'        => 'Standard',
-]);
+        // Define user data for seeding
+        $userData = [
+            [
+                'user_id'           => 'USR-ADM001',
+                'name'              => 'admin',
+                'email'             => 'admin@gmail.com',
+                'password'          => Hash::make('12345678'),
+                'role'              => 'Admin',
+                'status'            => 'active',
+                'is_premium'        => true,
+                'is_18_plus'        => true,
+                'gender'            => 'Male',
+                'background'        => 'Standard',
+                'email_verified_at' => Carbon::now(),
+            ],
+            [
+                'user_id'           => 'USR-USR001',
+                'name'              => 'user',
+                'email'             => 'user@gmail.com',
+                'password'          => Hash::make('12345678'),
+                'role'              => 'User',
+                'status'            => 'active',
+                'is_premium'        => true,
+                'is_18_plus'        => true,
+                'gender'            => 'Male',
+                'background'        => 'Standard',
+                'email_verified_at' => Carbon::now(),
+            ],
+            [
+                'user_id'           => 'USR-JHN002',
+                'name'              => 'john doe',
+                'email'             => 'user2@gmail.com',
+                'password'          => Hash::make('12345678'),
+                'role'              => 'User',
+                'status'            => 'active',
+                'is_premium'        => true,
+                'is_18_plus'        => true,
+                'gender'            => 'Male',
+                'background'        => 'Standard',
+                'email_verified_at' => Carbon::now(),
+            ],
+            [
+                'user_id'           => 'USR-LYB6PS',
+                'name'              => 'MD Khairul Islam',
+                'email'             => 'mkiuzzal07@gmail.com',
+                'password'          => Hash::make('12345678'),
+                'role'              => 'User',
+                'status'            => 'active',
+                'is_premium'        => false,
+                'is_18_plus'        => true,
+                'gender'            => 'Male',
+                'background'        => 'Asian',
+                'email_verified_at' => Carbon::now(),
+            ],
+        ];
 
-        // Admin User
-        User::create([
-            'user_id'           => 'USR-' . strtoupper(Str::random(6)),
-            'name' => 'Admin',
-            'email' => 'admin@admin.com',
-            'password' => Hash::make('12345678'),
-            'email_verified_at' => Carbon::now(),
-        ]);
-
-        // Google Login User (MD Khairul Islam)
-        User::create([
-            'user_id'           => 'USR-LYB6PS',
-            'name'              => 'MD Khairul Islam',
-            'email'             => 'mkiuzzal07@gmail.com',
-            'password'          => Hash::make('12345678'), // Google user-der password lagena, tobu default ekta diye rakhlam
-            'email_verified_at' => Carbon::now(),
-            'is_18_plus'        => true,
-            'gender'            => 'Male',
-            'background'        => 'Asian'
-            // Jodi apnar database- e avatar ba provider_token field thake, tahole nicher line gulo uncomment kore dite paren:
-            // 'avatar'            => 'https://lh3.googleusercontent.com/a/ACg8ocJ9p1Z0V5wemfcTYOYjZOEEMFep3EWw9nijP-K14TNyLC3rTIkj=s96-c',
-        ]);
+        // User data array loop to create users
+        foreach ($userData as $data) {
+            User::create($data);
+        }
     }
 }

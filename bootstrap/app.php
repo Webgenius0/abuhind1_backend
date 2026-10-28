@@ -24,7 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         }
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Sanctum API State-এর জন্য এটি প্রয়োজন
+        // Enable stateful authentication for Sanctum
         $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -101,10 +101,10 @@ class PremiumCodeController extends Controller
                 }
 
                 if ($request->filled('code')) {
-                    // Admin নিজে হাতে code লিখেছে — এটাই একমাত্র code
+                    // Custom code provided by admin
                     $codes = [strtoupper(trim($request->code))];
                 } else {
-                    // খালি রাখলে আগের মতো auto-generate
+                    // Auto-generate codes if left blank
                     $count = $request->filled('user_id') ? 1 : (int) $request->count;
                     $codes = $this->generateCodes($count);
                 }

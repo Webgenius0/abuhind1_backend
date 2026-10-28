@@ -8,11 +8,19 @@ use App\Http\Controllers\Web\Backend\PremiumCodeController;
 use App\Http\Controllers\Web\Backend\ProfileController;
 use App\Http\Controllers\Web\Backend\SocialMediaController;
 use App\Http\Controllers\Web\Backend\SystemSettingController;
+use App\Http\Controllers\Web\Backend\UserController;
 use App\Http\Controllers\Web\Backend\VideoTutorialController;
 
 Route::get('/dashboard', [DashBoardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+Route::controller(UserController::class)->group(function () {
+    Route::get('/users', 'index')->name('users.index');
+    Route::get('/users/show/{id}', 'show')->name('users.show');
+    Route::get('/users/status/{id}', 'status')->name('users.status');
+    Route::delete('/users/destroy/{id}', 'destroy')->name('users.destroy');
+});
 Route::controller(SystemSettingController::class)->group(function () {
     Route::get('/system-setting', 'index')->name('system.index');
     Route::post('/system-setting', 'update')->name('system.update');

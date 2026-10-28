@@ -69,7 +69,7 @@ class PremiumController extends Controller
             ->get(['code', 'used_at', 'validity_days']);
 
         $history = [];
-        $runningExpiry = null; // এখনো পর্যন্ত premium কবে শেষ হবে, redeem() এর লজিক অনুসরণ করে
+        $runningExpiry = null; // Tracks cumulative expiry date matching redeem() stacking logic
 
         foreach ($codes as $code) {
             if ($code->validity_days === null) {
@@ -86,7 +86,7 @@ class PremiumController extends Controller
                 'ends_at'    => $endsAt,
             ];
 
-            // একবার lifetime হয়ে গেলে পরের code আর নামাতে পারবে না, redeem()-এর মতোই
+            // Once lifetime is set, subsequent codes cannot shorten it
             if ($runningExpiry !== null || $endsAt === null) {
                 $runningExpiry = $endsAt;
             }

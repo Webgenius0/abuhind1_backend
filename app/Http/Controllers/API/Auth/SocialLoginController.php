@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Traits\ApiResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -16,12 +17,13 @@ class SocialLoginController extends Controller
     use ApiResponse;
 
     /**
-     * POST /api/social-login
-     * Social Login / Registration
+     * Handle social authentication (Google, Facebook, Apple, GitHub).
+     *
+     * @param  Request  $request
+     * @return JsonResponse
      */
-    public function socialLogin(Request $request)
+    public function socialLogin(Request $request): JsonResponse
     {
-
         $request->validate([
             'provider' => 'required|string|in:google,facebook,apple,github',
             'token'    => 'required|string',
@@ -39,11 +41,10 @@ class SocialLoginController extends Controller
             }
 
             $email = $socialUser->getEmail();
-
             $user = User::firstOrNew(['email' => $email]);
 
             if (!$user->exists) {
-                // ১. নতুন ইউজার হলে ইউনিক User ID তৈরি করা
+                // Register new user with a unique user ID
                 $user->user_id = $this->generateUniqueUserId();
 
                 $user->name = $socialUser->getName()
@@ -57,22 +58,21 @@ class SocialLoginController extends Controller
                 $user->email_verified_at = now();
                 $user->avatar = $socialUser->getAvatar();
             } else {
-                // পুরানো ইউজার হলে অবতার রিফ্রেশ করা
+                // Refresh avatar for existing user
                 $user->avatar = $socialUser->getAvatar() ?? $user->avatar;
             }
 
-            // Provider তথ্য আপডেট
+            // Sync provider credentials
             $user->provider = $provider;
             $user->provider_id = $socialUser->getId();
             $user->provider_token = $request->token;
             $user->save();
 
-            // আগের সেশন টোকেন ডিলিট
+            // Revoke previous tokens and issue a fresh session token
             $user->tokens()
                 ->where('name', 'SocialAuth-' . $provider)
                 ->delete();
 
-            // নতুন টোকেন ইস্যু
             $plainToken = $user->createToken('SocialAuth-' . $provider)->plainTextToken;
 
             return $this->success('Login successful.', [
@@ -93,14 +93,12 @@ class SocialLoginController extends Controller
     }
 
     /**
-     * POST /api/login-with-user-id
-     * Unique User ID দিয়ে সরাসরি লগইন
+     * Authenticate directly using a unique User ID.
+     *
+     * @param  Request  $request
+     * @return JsonResponse
      */
-    /**
-     * POST /api/login-with-user-id
-     * Unique User ID দিয়ে সরাসরি লগইন
-     */
-    public function loginWithUserId(Request $request)
+    public function loginWithUserId(Request $request): JsonResponse
     {
         $request->validate([
             'user_id' => 'required|string|exists:users,user_id',
@@ -108,17 +106,15 @@ class SocialLoginController extends Controller
 
         $user = User::where('user_id', $request->user_id)->first();
 
-        // ভ্যালিডেশনে already exists:users,user_id দেওয়া আছে,
-        // তাই ইউজার সাধারণত পাওয়া যাবেই, তবুও সেফটির জন্য চেক রাখা ভালো
         if (!$user) {
             return $this->error('Invalid User ID.', null, 404);
         }
 
-        // আগের Sanctum Token মুছে নতুন টোকেন ইস্যু করা
+        // Revoke prior tokens and issue new auth token
         $user->tokens()->where('name', 'UserIdAuth')->delete();
         $plainToken = $user->createToken('UserIdAuth')->plainTextToken;
         $user->setAttribute('onboarding_completed', $user->onboarding_completed);
-        // ট্রেইট ব্যবহার করে রেসপন্স রিটার্ন
+
         return $this->success('Login successful via User ID.', [
             'token_type' => 'Bearer',
             'token'      => $plainToken,
@@ -127,21 +123,27 @@ class SocialLoginController extends Controller
     }
 
     /**
-     * ইউনিক User ID জেনারেট করার ফাংশন (যেমন: USR-A1B2C3)
+     * Generate a unique alphanumeric User ID (e.g., USR-A1B2C3).
+     *
+     * @return string
      */
     private function generateUniqueUserId(): string
     {
         do {
-            // USR- এর পর ৬ ডিজিটের র‍্যান্ডম আলফানিউমেরিক কোড তৈরি
             $userId = 'USR-' . strtoupper(Str::random(6));
         } while (User::where('user_id', $userId)->exists());
 
         return $userId;
     }
 
-    public function completeOnboarding(Request $request)
+    /**
+     * Complete user onboarding profile.
+     *
+     * @param  Request  $request
+     * @return JsonResponse
+     */
+    public function completeOnboarding(Request $request): JsonResponse
     {
-
         $validated = $request->validate([
             'is_18_plus' => 'required|boolean',
             'gender'     => 'required|string|in:male,female,other',

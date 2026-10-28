@@ -46,7 +46,7 @@ class LoginController extends Controller
             $user->save();
         }
 
-        // Email verify হয়নি
+        // Email not verified; generate and send OTP
         if (is_null($user->email_verified_at)) {
             $code = $this->otpService->generateForUser($user);
             Mail::to($user->email)->send(new RegistrationOtp($user, $code));

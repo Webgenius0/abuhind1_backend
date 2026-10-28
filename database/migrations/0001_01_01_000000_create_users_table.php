@@ -4,13 +4,13 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class () extends Migration {
+return new class() extends Migration {
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('user_id')->unique(); // ইউনিক ইউজার আইডি (যেমন: USR-X8F2A9)
-            $table->string('name');
+            $table->string('user_id')->unique(); // Unique user identifier (e.g., USR-X8F2A9)
+            $table->string('name')->nullable();
             $table->string('email')->unique();
             $table->string('avatar')->nullable();
 
@@ -23,10 +23,11 @@ return new class () extends Migration {
             $table->string('provider_id')->nullable();
             $table->text('provider_token')->nullable();
             $table->string('role')->default('User');
+            $table->enum('status', ['active', 'inactive', 'suspended', 'blocked'])->default('active');
             $table->boolean('is_premium')->default(false);
             $table->timestamp('premium_expires_at')->nullable();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password')->nullable(); // পাসওয়ার্ড নাল-এবল রাখা হলো
+            $table->string('password')->nullable(); // Nullable to accommodate OAuth/social login users
             $table->rememberToken();
             $table->timestamps();
         });
