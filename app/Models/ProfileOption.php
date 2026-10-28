@@ -2,17 +2,38 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ProfileOption extends Model
 {
-    protected $fillable = [
-        'group',
-        'key',
-        'label',
-        'info',
-        'sort_order'
-    ];
+    use HasFactory;
+
+    // Table name
+    protected $table = 'profile_options';
 
     public $timestamps = true;
+
+    // The attributes that are mass assignable.
+    protected $guarded = [];
+
+    // The attributes that should be hidden for serialization.
+    protected $hidden = [];
+
+    // The attributes that should be cast.
+    protected function casts(): array
+    {
+        return [
+            'id'         => 'integer',
+            'group'      => 'string',
+            'key'        => 'string',
+            'label'      => 'string',
+            'info'       => 'string',
+            'sort_order' => 'integer',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+        ];
+    }
+
+    // Relationships and other model methods can be added here
 }

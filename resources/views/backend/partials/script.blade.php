@@ -39,24 +39,24 @@
 <!-- Theme js-->
 <script src="{{ asset('backend/js/script.js') }}"></script>
 <script>
-    // ১. প্লাগইন রেজিস্টার করা
+    // 1. Register FilePond plugins
     FilePond.registerPlugin(FilePondPluginImagePreview);
 
-    // ২. সব .filepond ইনপুট এলিমেন্ট খুঁজে বের করা
+    // 2. Query all .filepond inputs
     const inputElements = document.querySelectorAll('.filepond');
 
-    // ৩. প্রতিটি ইনপুটকে FilePond-এ রূপান্তর করা
+    // 3. Initialize FilePond instance for each element
     inputElements.forEach(inputElement => {
         const pond = FilePond.create(inputElement, {
             allowMultiple: false,
             allowReorder: false,
             imagePreviewHeight: 140,
-            // ফাইল সিলেক্ট করলেই সাথে সাথে আপলোড হবে না, ফর্ম সাবমিট দিলে হবে (সাধারণত এটিই সহজ)
+            // Submit file with form data
             storeAsFile: true,
             labelIdle: 'Drag & Drop your picture or <span class="filepond--label-action">Browse</span>',
         });
 
-        // ৪. যদি আগে থেকে ইমেজ সেভ করা থাকে (Default File) তা দেখানো
+        // 4. Populate pre-existing files if available
         @isset($setting)
             if (inputElement.id === 'logo' && "{{ asset($setting->logo) }}") {
                 pond.addFile("{{ asset($setting->logo) }}");
@@ -67,7 +67,7 @@
         @endisset
     });
 
-    // আপনার আগের CKEditor কোড এখানে থাকবে
+    // CKEditor initialization
     ClassicEditor
         .create(document.querySelector('#description'))
         .catch(error => {
