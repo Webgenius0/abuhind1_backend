@@ -31,11 +31,11 @@ class DynamicGalleryController extends Controller
                     return '<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-primary-50 text-primary-700 dark:bg-primary-950/50 dark:text-primary-400">Front View</span>';
                 })
                 ->addColumn('title_info', function (DynamicGallery $gallery) {
-                    return '<span class="font-medium text-gray-800 dark:text-gray-100">' . e($gallery->title) . '</span>' .
-                           '<span class="block text-xs text-gray-400">' . e($gallery->subtitle) . '</span>';
+                    return '<span class="font-medium text-gray-800 dark:text-gray-100">' . e(Str::limit($gallery->title, 40)) . '</span>' .
+                           '<span class="block text-xs text-gray-400">' . e(Str::limit($gallery->subtitle, 40)) . '</span>';
                 })
                 ->editColumn('description', function (DynamicGallery $gallery) {
-                    return e(Str::limit(strip_tags((string) $gallery->description), 80) ?: 'N/A');
+                    return e(Str::limit(strip_tags((string) $gallery->description), 40) ?: 'N/A');
                 })
                 ->addColumn('right_image_render', function (DynamicGallery $gallery) {
                     if ($gallery->right_image) {

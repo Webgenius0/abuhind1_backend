@@ -27,10 +27,10 @@ class VideoTutorialController extends Controller
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->editColumn('title', function (VideoTutorial $tutorial) {
-                    return ! empty($tutorial->title) ? e($tutorial->title) : 'N/A';
+                    return ! empty($tutorial->title) ? e(Str::limit($tutorial->title, 40)) : 'N/A';
                 })
                 ->editColumn('description', function (VideoTutorial $tutorial) {
-                    return e(Str::limit((string) $tutorial->description, 80) ?: 'N/A');
+                    return e(Str::limit((string) $tutorial->description, 40) ?: 'N/A');
                 })
                 ->addColumn('youtube_link', function (VideoTutorial $tutorial) {
                     if ($tutorial->youtube_link) {
@@ -53,10 +53,24 @@ class VideoTutorialController extends Controller
                 })
                 ->addColumn('action', function (VideoTutorial $tutorial) {
                     $editUrl = route('admin.video_tutorial.edit', $tutorial->id);
+                    $watchUrl = e($tutorial->youtube_link);
+
+                    $showBtn = $tutorial->youtube_link
+                        ? '<a href="' . $watchUrl . '" target="_blank" rel="noopener noreferrer"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg text-blue-600 bg-blue-100 hover:bg-blue-600 hover:text-white dark:text-blue-400 dark:bg-blue-900/30 dark:hover:bg-blue-600 dark:hover:text-white transition-all shadow-sm hover:shadow"
+                            title="View / Watch Video">
+                            <i class="fa-solid fa-eye text-sm"></i>
+                        </a>'
+                        : '<button type="button" disabled
+                            class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-50"
+                            title="No video link">
+                            <i class="fa-solid fa-eye text-sm"></i>
+                        </button>';
 
                     return '<div class="flex items-center justify-center gap-2">
+                        ' . $showBtn . '
                         <a href="' . $editUrl . '"
-                            class="w-8 h-8 flex items-center justify-center rounded-lg text-blue-600 bg-blue-100 hover:bg-blue-600 hover:text-white dark:text-blue-400 dark:bg-blue-900/30 dark:hover:bg-blue-600 dark:hover:text-white transition-all shadow-sm hover:shadow"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-600 bg-emerald-100 hover:bg-emerald-600 hover:text-white dark:text-emerald-400 dark:bg-emerald-900/30 dark:hover:bg-emerald-600 dark:hover:text-white transition-all shadow-sm hover:shadow"
                             title="Edit Video">
                             <i class="fa-solid fa-pen-to-square text-sm"></i>
                         </a>

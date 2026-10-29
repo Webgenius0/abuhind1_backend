@@ -25,7 +25,7 @@ class PremiumCodeController extends Controller
     public function index(Request $request): View | JsonResponse
     {
         if ($request->ajax()) {
-            $query = PremiumCode::with(['assignedUser:id,name,email', 'usedBy:id,name,email'])->latest('id');
+            $query = PremiumCode::with(['assignedUser:id,name,email', 'usedBy:id,name,email', 'creator:id,name,email'])->latest('id');
 
             if ($status = $request->input('status')) {
                 $query->withStatus($status);
@@ -34,12 +34,7 @@ class PremiumCodeController extends Controller
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('code_info', function (PremiumCode $code) {
-                    $html = '<span class="font-mono text-xs font-semibold text-gray-800 dark:text-gray-100 bg-gray-100 dark:bg-gray-800 rounded-lg px-2 py-1">' . e($code->code) . '</span>';
-                    if ($code->note) {
-                        $html .= '<span class="block text-xs text-gray-400 mt-1">' . e($code->note) . '</span>';
-                    }
-
-                    return $html;
+                    return '<span class="font-mono text-xs font-semibold text-gray-800 dark:text-gray-100 bg-gray-100 dark:bg-gray-800 rounded-lg px-2 py-1">' . e($code->code) . '</span>';
                 })
                 ->filterColumn('code_info', function ($query, $keyword) {
                     $query->where(function ($q) use ($keyword) {
@@ -83,17 +78,44 @@ class PremiumCodeController extends Controller
                     return $code->created_at ? $code->created_at->format('d M, Y') : 'N/A';
                 })
                 ->addColumn('action', function (PremiumCode $code) {
-                    $editBtn = '';
-                    if ($code->status === 'unused') {
-                        $editUrl = route('admin.premium_code.edit', $code->id);
-                        $editBtn = '<a href="' . $editUrl . '"
-                            class="w-8 h-8 flex items-center justify-center rounded-lg text-blue-600 bg-blue-100 hover:bg-blue-600 hover:text-white dark:text-blue-400 dark:bg-blue-900/30 dark:hover:bg-blue-600 dark:hover:text-white transition-all shadow-sm hover:shadow"
+                    $payload = e(json_encode([
+                        'id'              => $code->id,
+                        'code'            => $code->code,
+                        'status'          => $code->status,
+                        'validity'        => $code->validity_days ? ($code->validity_days . ' days') : 'Lifetime',
+                        'code_expires_at' => $code->code_expires_at ? $code->code_expires_at->format('M d, Y h:i A') : 'No Expiry (Never)',
+                        'assigned_user'   => $code->assignedUser ? ($code->assignedUser->name . ' (' . $code->assignedUser->email . ')') : 'None (Public)',
+                        'used_by'         => $code->usedBy ? ($code->usedBy->name . ' (' . $code->usedBy->email . ')') : 'Not redeemed yet',
+                        'used_at'         => $code->used_at ? $code->used_at->format('M d, Y h:i A') : '—',
+                        'note'            => $code->note ?: 'No notes provided',
+                        'created_by'      => $code->creator?->name ?? 'System/Admin',
+                        'created_at'      => $code->created_at ? $code->created_at->format('M d, Y h:i A') : 'N/A',
+                    ]));
+
+                    $editUrl = route('admin.premium_code.edit', $code->id);
+                    $isUnused = $code->status === 'unused';
+
+                    $editBtn = $isUnused
+                        ? '<a href="' . $editUrl . '"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-600 bg-emerald-100 hover:bg-emerald-600 hover:text-white dark:text-emerald-400 dark:bg-emerald-900/30 dark:hover:bg-emerald-600 dark:hover:text-white transition-all shadow-sm hover:shadow"
                             title="Edit Code">
                             <i class="fa-solid fa-pen-to-square text-sm"></i>
-                        </a>';
-                    }
+                        </a>'
+                        : '<button type="button"
+                            onclick="toastr.warning(\'Only unused codes can be edited.\')"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 bg-gray-100 dark:bg-gray-800 cursor-not-allowed transition-all opacity-60"
+                            title="Cannot edit: code is ' . $code->status . '">
+                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                        </button>';
 
                     return '<div class="flex items-center justify-center gap-2">
+                        <button type="button"
+                            data-code="' . $payload . '"
+                            onclick="showPremiumCode(this)"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg text-blue-600 bg-blue-100 hover:bg-blue-600 hover:text-white dark:text-blue-400 dark:bg-blue-900/30 dark:hover:bg-blue-600 dark:hover:text-white transition-all shadow-sm hover:shadow"
+                            title="View Code Details">
+                            <i class="fa-solid fa-eye text-sm"></i>
+                        </button>
                         ' . $editBtn . '
                         <button type="button"
                             class="w-8 h-8 flex items-center justify-center rounded-lg text-red-600 bg-red-100 hover:bg-red-600 hover:text-white dark:text-red-400 dark:bg-red-900/30 dark:hover:bg-red-600 dark:hover:text-white transition-all shadow-sm hover:shadow"
