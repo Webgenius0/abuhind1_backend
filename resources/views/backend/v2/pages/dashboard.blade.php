@@ -111,18 +111,6 @@
             <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-1">Content Overview</h3>
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">CMS inventory at a glance</p>
 
-            <div class="flex items-center justify-center mb-4">
-                <div class="relative" style="width: 180px; height: 180px;">
-                    <canvas id="contentDonutChart" width="180" height="180"></canvas>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span class="text-2xl font-bold text-gray-900 dark:text-white">
-                            {{ number_format($stats['dynamic_pages'] + $stats['video_tutorials'] + $stats['galleries'] + $stats['total_codes']) }}
-                        </span>
-                        <span class="text-[11px] text-gray-500 dark:text-gray-400">Total Items</span>
-                    </div>
-                </div>
-            </div>
-
             @php
                 $contentItems = [
                     ['label' => 'Dynamic Pages', 'value' => $stats['dynamic_pages'], 'color' => '#6366f1'],
@@ -132,16 +120,30 @@
                 ];
             @endphp
 
-            <div class="grid grid-cols-2 gap-3">
-                @foreach ($contentItems as $item)
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: {{ $item['color'] }}"></span>
-                        <div class="min-w-0">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ $item['label'] }}</p>
-                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ number_format($item['value']) }}</p>
-                        </div>
+            <div style="display: flex; align-items: center; gap: 24px;">
+                {{-- Donut Chart --}}
+                <div style="position: relative; width: 160px; height: 160px; flex-shrink: 0;">
+                    <canvas id="contentDonutChart" width="160" height="160"></canvas>
+                    <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <span class="text-2xl font-bold text-gray-900 dark:text-white">
+                            {{ number_format($stats['dynamic_pages'] + $stats['video_tutorials'] + $stats['galleries'] + $stats['total_codes']) }}
+                        </span>
+                        <span style="font-size: 11px;" class="text-gray-500 dark:text-gray-400">Total Items</span>
                     </div>
-                @endforeach
+                </div>
+
+                {{-- Legend --}}
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1;">
+                    @foreach ($contentItems as $item)
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; background-color: {{ $item['color'] }};"></span>
+                            <div style="min-width: 0;">
+                                <p style="font-size: 12px; margin: 0;" class="text-gray-500 dark:text-gray-400">{{ $item['label'] }}</p>
+                                <p style="font-size: 14px; font-weight: 600; margin: 0;" class="text-gray-900 dark:text-white">{{ number_format($item['value']) }}</p>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
     </div>
