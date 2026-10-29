@@ -480,21 +480,7 @@
                     cutout: '70%',
                     plugins: {
                         legend: { display: false },
-                        tooltip: {
-                            backgroundColor: 'rgba(15,23,42,0.9)',
-                            titleFont: { size: 12 },
-                            bodyFont: { size: 11 },
-                            padding: 10,
-                            cornerRadius: 8,
-                            callbacks: {
-                                label: function(context) {
-                                    if (total === 0) return 'No data yet';
-                                    const value = context.raw;
-                                    const pct = Math.round((value / total) * 100);
-                                    return ` ${context.label}: ${value} (${pct}%)`;
-                                }
-                            }
-                        }
+                        tooltip: { enabled: false }
                     }
                 }
             });
