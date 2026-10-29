@@ -10,87 +10,89 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
-use Yajra\DataTables\DataTables;
+use Yajra\DataTables\Facades\DataTables;
 
 class DynamicGalleryController extends Controller
 {
     public function index(Request $request): View | JsonResponse
     {
         if ($request->ajax()) {
-            $data = DynamicGallery::latest('id');
+            $query = DynamicGallery::query()->latest('id');
 
-            if ($request->filled('type')) {
-                $data->where('type', $request->input('type'));
-            }
-
-            if (!empty($request->input('search.value'))) {
-                $searchTerm = $request->input('search.value');
-                $data->where(function ($query) use ($searchTerm) {
-                    $query->where('title', 'LIKE', "%$searchTerm%")
-                          ->orWhere('subtitle', 'LIKE', "%$searchTerm%")
-                          ->orWhere('description', 'LIKE', "%$searchTerm%")
-                          ->orWhere('type', 'LIKE', "%$searchTerm%");
-                });
-            }
-
-            return DataTables::of($data)
+            return DataTables::of($query)
                 ->addIndexColumn()
-                ->addColumn('type', function ($data) {
-                    return strtolower($data->type ?? '') === 'side' ? 'Side View' : 'Front View';
-                })
-                ->addColumn('title', function ($data) {
-                    return e($data->title);
-                })
-                ->addColumn('description', function ($data) {
-                    $desc = $data->description ?? '';
-                    return e(strlen($desc) > 80 ? substr($desc, 0, 80) . '...' : $desc);
-                })
-                ->addColumn('right_image', function ($data) {
-                    $raw = $data->getRawOriginal('right_image');
-                    if ($raw && file_exists(public_path($raw))) {
-                        return '<img src="' . $data->right_image . '" alt="That\'s right" style="width: 45px; height: 45px; object-fit: cover; border-radius: 4px;">';
+                ->addColumn('type_badge', function (DynamicGallery $gallery) {
+                    if (strtolower((string) $gallery->type) === 'side') {
+                        return '<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400">Side View</span>';
                     }
-                    return '<span class="text-muted">No Image</span>';
+
+                    return '<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-primary-50 text-primary-700 dark:bg-primary-950/50 dark:text-primary-400">Front View</span>';
                 })
-                ->addColumn('wrong_image', function ($data) {
-                    $raw = $data->getRawOriginal('wrong_image');
-                    if ($raw && file_exists(public_path($raw))) {
-                        return '<img src="' . $data->wrong_image . '" alt="Not like that" style="width: 45px; height: 45px; object-fit: cover; border-radius: 4px;">';
+                ->addColumn('title_info', function (DynamicGallery $gallery) {
+                    return '<span class="font-medium text-gray-800 dark:text-gray-100">' . e($gallery->title) . '</span>' .
+                           '<span class="block text-xs text-gray-400">' . e($gallery->subtitle) . '</span>';
+                })
+                ->editColumn('description', function (DynamicGallery $gallery) {
+                    return e(Str::limit(strip_tags((string) $gallery->description), 80) ?: 'N/A');
+                })
+                ->addColumn('right_image_render', function (DynamicGallery $gallery) {
+                    if ($gallery->right_image) {
+                        return '<a href="' . e($gallery->right_image) . '" target="_blank" class="inline-block group" title="Click to view full image">
+                            <img src="' . e($gallery->right_image) . '" alt="That\'s Right"
+                                class="w-16 h-16 rounded-xl object-cover border-2 border-emerald-300 dark:border-emerald-700 shadow-sm group-hover:scale-105 transition-transform"
+                                style="width: 64px; height: 64px; min-width: 64px; min-height: 64px; max-width: 64px; max-height: 64px; object-fit: cover; border-radius: 0.75rem;">
+                        </a>';
                     }
-                    return '<span class="text-muted">No Image</span>';
+
+                    return '<span class="text-xs text-gray-400">No image</span>';
                 })
-                ->addColumn('status', function ($data) {
-                    $checked = $data->status == "active" ? "checked" : "";
-                    return '
-                        <div class="form-check form-switch d-flex">
-                            <input onclick="showStatusChangeAlert(' . $data->id . ')"
-                                   type="checkbox"
-                                   class="form-check-input status-toggle"
-                                   id="switch' . $data->id . '"
-                                   data-id="' . $data->id . '"
-                                   name="status" ' . $checked . '>
-                            <label class="form-check-label ms-2" for="switch' . $data->id . '"></label>
-                        </div>
-                    ';
+                ->addColumn('wrong_image_render', function (DynamicGallery $gallery) {
+                    if ($gallery->wrong_image) {
+                        return '<a href="' . e($gallery->wrong_image) . '" target="_blank" class="inline-block group" title="Click to view full image">
+                            <img src="' . e($gallery->wrong_image) . '" alt="Not Like That"
+                                class="w-16 h-16 rounded-xl object-cover border-2 border-red-300 dark:border-red-700 shadow-sm group-hover:scale-105 transition-transform"
+                                style="width: 64px; height: 64px; min-width: 64px; min-height: 64px; max-width: 64px; max-height: 64px; object-fit: cover; border-radius: 0.75rem;">
+                        </a>';
+                    }
+
+                    return '<span class="text-xs text-gray-400">No image</span>';
                 })
-                ->addColumn('action', function ($data) {
-                    return '<div class="btn-group btn-group-sm" role="group">
-                                <a href="' . route('admin.dynamic_gallery.edit', ['id' => $data->id]) . '" class="btn btn-primary" title="Edit">
-                                   <i class="fa fa-pencil me-1"></i> Edit
-                                </a>
-                                <button onclick="showDeleteConfirm(' . $data->id . ')" class="btn btn-danger ms-1" title="Delete">
-                                   <i class="fa fa-trash me-1"></i> Delete
-                                </button>
-                            </div>';
+                ->addColumn('status', function (DynamicGallery $gallery) {
+                    $checked = ($gallery->status ?? 'active') === 'active' ? 'checked' : '';
+
+                    return '<label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" onclick="changeStatus(event, ' . $gallery->id . ')"
+                            class="sr-only peer" ' . $checked . '>
+                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[\'\'] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-green-500"></div>
+                    </label>';
                 })
-                ->rawColumns(['type', 'right_image', 'wrong_image', 'status', 'action'])
+                ->addColumn('action', function (DynamicGallery $gallery) {
+                    $editUrl = route('admin.dynamic_gallery.edit', $gallery->id);
+
+                    return '<div class="flex items-center justify-center gap-2">
+                        <a href="' . $editUrl . '"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg text-blue-600 bg-blue-100 hover:bg-blue-600 hover:text-white dark:text-blue-400 dark:bg-blue-900/30 dark:hover:bg-blue-600 dark:hover:text-white transition-all shadow-sm hover:shadow"
+                            title="Edit">
+                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                        </a>
+                        <button type="button"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg text-red-600 bg-red-100 hover:bg-red-600 hover:text-white dark:text-red-400 dark:bg-red-900/30 dark:hover:bg-red-600 dark:hover:text-white transition-all shadow-sm hover:shadow"
+                            onclick="deleteRecord(event, ' . $gallery->id . ')"
+                            title="Delete">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </div>';
+                })
+                ->rawColumns(['type_badge', 'title_info', 'right_image_render', 'wrong_image_render', 'status', 'action'])
                 ->make(true);
         }
 
-        $canCreate = DynamicGallery::count() < 2;
+        $galleries = DynamicGallery::latest('id')->get();
+        $canCreate = $galleries->count() < 2;
 
-        return view('backend.layouts.dynamic_gallery.index', compact('canCreate'));
+        return view('backend.v2.pages.dynamic_gallery.index', compact('galleries', 'canCreate'));
     }
 
     public function create(): View | RedirectResponse
@@ -101,7 +103,7 @@ class DynamicGalleryController extends Controller
                 return redirect()->route('admin.dynamic_gallery.index')
                     ->with('t-info', 'Front View and Side View items are already created (1 each). You can edit them.');
             }
-            return view('backend.layouts.dynamic_gallery.create', compact('existingTypes'));
+            return view('backend.v2.pages.dynamic_gallery.create', compact('existingTypes'));
         }
         return redirect()->route('admin.dynamic_gallery.index');
     }
@@ -150,7 +152,7 @@ class DynamicGalleryController extends Controller
     {
         if (User::find(auth()->user()->id)) {
             $data = DynamicGallery::findOrFail($id);
-            return view('backend.layouts.dynamic_gallery.edit', compact('data'));
+            return view('backend.v2.pages.dynamic_gallery.edit', compact('data'));
         }
         return redirect()->route('admin.dynamic_gallery.index');
     }
@@ -209,44 +211,53 @@ class DynamicGalleryController extends Controller
 
     public function status(int $id): JsonResponse
     {
-        $data = DynamicGallery::findOrFail($id);
-        if ($data->status === 'active') {
-            $data->status = 'inactive';
+        try {
+            $data = DynamicGallery::findOrFail($id);
+            $data->status = ($data->status === 'active') ? 'inactive' : 'active';
             $data->save();
+
             return response()->json([
+                't-success' => true,
+                'success'   => true,
+                'message'   => 'Status changed successfully.',
+                'data'      => $data,
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                't-error' => true,
                 'success' => false,
-                'message' => 'Status changed to Inactive.',
-                'data'    => $data,
-            ]);
-        } else {
-            $data->status = 'active';
-            $data->save();
-            return response()->json([
-                'success' => true,
-                'message' => 'Status changed to Active.',
-                'data'    => $data,
-            ]);
+                'message' => 'Failed to update status: ' . $e->getMessage(),
+            ], 500);
         }
     }
 
     public function destroy(int $id): JsonResponse
     {
-        $gallery = DynamicGallery::findOrFail($id);
-        $rightImg = $gallery->getRawOriginal('right_image');
-        $wrongImg = $gallery->getRawOriginal('wrong_image');
+        try {
+            $gallery = DynamicGallery::findOrFail($id);
+            $rightImg = $gallery->getRawOriginal('right_image');
+            $wrongImg = $gallery->getRawOriginal('wrong_image');
 
-        if ($rightImg && file_exists(public_path($rightImg)) && !str_contains($rightImg, 'sample')) {
-            @unlink(public_path($rightImg));
+            if ($rightImg && file_exists(public_path($rightImg)) && !str_contains($rightImg, 'sample')) {
+                @unlink(public_path($rightImg));
+            }
+            if ($wrongImg && file_exists(public_path($wrongImg)) && !str_contains($wrongImg, 'sample')) {
+                @unlink(public_path($wrongImg));
+            }
+
+            $gallery->delete();
+
+            return response()->json([
+                't-success' => true,
+                'success'   => true,
+                'message'   => 'Image set deleted successfully.',
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                't-error' => true,
+                'success' => false,
+                'message' => 'Failed to delete: ' . $e->getMessage(),
+            ], 500);
         }
-        if ($wrongImg && file_exists(public_path($wrongImg)) && !str_contains($wrongImg, 'sample')) {
-            @unlink(public_path($wrongImg));
-        }
-
-        $gallery->delete();
-
-        return response()->json([
-            't-success' => true,
-            'message'   => 'Deleted successfully.',
-        ]);
     }
 }

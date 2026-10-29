@@ -10,60 +10,75 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
-use Yajra\DataTables\DataTables;
+use Yajra\DataTables\Facades\DataTables;
 
 class VideoTutorialController extends Controller
 {
+    /**
+     * Display a listing of video tutorials via Yajra DataTables (AJAX) or view (Web).
+     */
     public function index(Request $request): View | JsonResponse
     {
         if ($request->ajax()) {
-            $data = VideoTutorial::latest();
-            if (!empty($request->input('search.value'))) {
-                $searchTerm = $request->input('search.value');
-                $data->where('title', 'LIKE', "%$searchTerm%");
-            }
-            return DataTables::of($data)
+            $query = VideoTutorial::query()->latest('id');
+
+            return DataTables::of($query)
                 ->addIndexColumn()
-                ->addColumn('description', function ($data) {
-                    $desc = $data->description;
-                    $short_desc = strlen($desc) > 100 ? substr($desc, 0, 100) . '...' : $desc;
-                    return '<p>' . $short_desc . '</p>';
+                ->editColumn('title', function (VideoTutorial $tutorial) {
+                    return ! empty($tutorial->title) ? e($tutorial->title) : 'N/A';
                 })
-                ->addColumn('youtube_link', function ($data) {
-                    return '<a href="' . $data->youtube_link . '" target="_blank">Watch Video</a>';
+                ->editColumn('description', function (VideoTutorial $tutorial) {
+                    return e(Str::limit((string) $tutorial->description, 80) ?: 'N/A');
                 })
-                ->addColumn('status', function ($data) {
-                    $checked = $data->status == "active" ? "checked" : "";
-                    return '
-                        <div class="form-check form-switch d-flex">
-                            <input onclick="showStatusChangeAlert(' . $data->id . ')"
-                                   type="checkbox"
-                                   class="form-check-input status-toggle"
-                                   id="switch' . $data->id . '"
-                                   data-id="' . $data->id . '"
-                                   name="status" ' . $checked . '>
-                            <label class="form-check-label ms-2" for="switch' . $data->id . '"></label>
-                        </div>
-                    ';
+                ->addColumn('youtube_link', function (VideoTutorial $tutorial) {
+                    if ($tutorial->youtube_link) {
+                        return '<a href="' . e($tutorial->youtube_link) . '" target="_blank" rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:underline">
+                            <i class="fa-brands fa-youtube text-red-500 text-base"></i> Watch Video
+                        </a>';
+                    }
+
+                    return '<span class="text-xs text-gray-400">N/A</span>';
                 })
-                ->addColumn('action', function ($data) {
-                    return '<div class="btn-group btn-group-sm" role="group">
-                                <a href="' . route('admin.video_tutorial.edit', ['id' => $data->id]) . '" class="text-white btn btn-primary" title="Edit">
-                                   <i class="fa fa-pencil" aria-hidden="true"></i>
-                                </a>
-                            </div>';
+                ->addColumn('status', function (VideoTutorial $tutorial) {
+                    $checked = ($tutorial->status ?? 'active') === 'active' ? 'checked' : '';
+
+                    return '<label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" onclick="changeStatus(event, ' . $tutorial->id . ')"
+                            class="sr-only peer" ' . $checked . '>
+                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[\'\'] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-green-500"></div>
+                    </label>';
                 })
-                ->rawColumns(['description', 'youtube_link', 'status', 'action'])
-                ->make();
+                ->addColumn('action', function (VideoTutorial $tutorial) {
+                    $editUrl = route('admin.video_tutorial.edit', $tutorial->id);
+
+                    return '<div class="flex items-center justify-center gap-2">
+                        <a href="' . $editUrl . '"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg text-blue-600 bg-blue-100 hover:bg-blue-600 hover:text-white dark:text-blue-400 dark:bg-blue-900/30 dark:hover:bg-blue-600 dark:hover:text-white transition-all shadow-sm hover:shadow"
+                            title="Edit Video">
+                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                        </a>
+                        <button type="button"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg text-red-600 bg-red-100 hover:bg-red-600 hover:text-white dark:text-red-400 dark:bg-red-900/30 dark:hover:bg-red-600 dark:hover:text-white transition-all shadow-sm hover:shadow"
+                            onclick="deleteRecord(event, ' . $tutorial->id . ')"
+                            title="Delete Video">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </div>';
+                })
+                ->rawColumns(['youtube_link', 'status', 'action'])
+                ->make(true);
         }
-        return view('backend.layouts.video_tutorial.index');
+
+        return view('backend.v2.pages.video_tutorial.index');
     }
 
     public function create(): View | RedirectResponse
     {
         if (User::find(auth()->user()->id)) {
-            return view('backend.layouts.video_tutorial.create');
+            return view('backend.v2.pages.video_tutorial.create');
         }
         return redirect()->route('admin.video_tutorial.index');
     }
@@ -98,7 +113,7 @@ class VideoTutorialController extends Controller
     {
         if (User::find(auth()->user()->id)) {
             $data = VideoTutorial::findOrFail($id);
-            return view('backend.layouts.video_tutorial.edit', compact('data'));
+            return view('backend.v2.pages.video_tutorial.edit', compact('data'));
         }
         return redirect()->route('admin.video_tutorial.index');
     }
@@ -134,35 +149,43 @@ class VideoTutorialController extends Controller
 
     public function status(int $id): JsonResponse
     {
-        $data = VideoTutorial::findOrFail($id);
-        if ($data->status == 'active') {
-            $data->status = 'inactive';
+        try {
+            $data = VideoTutorial::findOrFail($id);
+            $data->status = ($data->status === 'active') ? 'inactive' : 'active';
             $data->save();
 
             return response()->json([
+                't-success' => true,
+                'success'   => true,
+                'message'   => 'Status changed successfully.',
+                'data'      => $data,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                't-error' => true,
                 'success' => false,
-                'message' => 'Unpublished Successfully.',
-                'data'    => $data,
-            ]);
-        } else {
-            $data->status = 'active';
-            $data->save();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Published Successfully.',
-                'data'    => $data,
-            ]);
+                'message' => 'Failed to update status: ' . $e->getMessage(),
+            ], 500);
         }
     }
 
     public function destroy(int $id): JsonResponse
     {
-        $page = VideoTutorial::findOrFail($id);
-        $page->delete();
-        return response()->json([
-            't-success' => true,
-            'message'   => 'Deleted successfully.',
-        ]);
+        try {
+            $page = VideoTutorial::findOrFail($id);
+            $page->delete();
+
+            return response()->json([
+                't-success' => true,
+                'success'   => true,
+                'message'   => 'Video tutorial deleted successfully.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                't-error' => true,
+                'success' => false,
+                'message' => 'Failed to delete video tutorial: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }
