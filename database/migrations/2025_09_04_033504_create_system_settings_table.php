@@ -15,11 +15,16 @@ return new class extends Migration
             $table->id();
             $table->string('title')->nullable();
             $table->string('email')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('address')->nullable();
             $table->string('system_name')->nullable();
             $table->string('copyright_text')->nullable();
             $table->string('logo')->nullable();
             $table->string('favicon')->nullable();
             $table->longText('description')->nullable();
+            $table->string('timezone')->nullable();
+            $table->boolean('maintenance_mode')->default(false);
+            $table->longText('maintenance_message')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
