@@ -111,25 +111,34 @@
             <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-1">Content Overview</h3>
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">CMS inventory at a glance</p>
 
+            <div class="flex items-center justify-center mb-4">
+                <div class="relative" style="width: 180px; height: 180px;">
+                    <canvas id="contentDonutChart" width="180" height="180"></canvas>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span class="text-2xl font-bold text-gray-900 dark:text-white">
+                            {{ number_format($stats['dynamic_pages'] + $stats['video_tutorials'] + $stats['galleries'] + $stats['total_codes']) }}
+                        </span>
+                        <span class="text-[11px] text-gray-500 dark:text-gray-400">Total Items</span>
+                    </div>
+                </div>
+            </div>
+
             @php
-                $contentRows = [
-                    ['label' => 'Dynamic Pages', 'value' => $stats['dynamic_pages'], 'max' => max(1, $stats['dynamic_pages'], $stats['video_tutorials'], $stats['galleries'], $stats['total_codes']), 'bar' => 'bg-primary-500'],
-                    ['label' => 'Video Tutorials', 'value' => $stats['video_tutorials'], 'max' => max(1, $stats['dynamic_pages'], $stats['video_tutorials'], $stats['galleries'], $stats['total_codes']), 'bar' => 'bg-violet-500'],
-                    ['label' => 'Dynamic Images', 'value' => $stats['galleries'], 'max' => max(1, $stats['dynamic_pages'], $stats['video_tutorials'], $stats['galleries'], $stats['total_codes']), 'bar' => 'bg-emerald-500'],
-                    ['label' => 'Premium Codes', 'value' => $stats['total_codes'], 'max' => max(1, $stats['dynamic_pages'], $stats['video_tutorials'], $stats['galleries'], $stats['total_codes']), 'bar' => 'bg-amber-500'],
+                $contentItems = [
+                    ['label' => 'Dynamic Pages', 'value' => $stats['dynamic_pages'], 'color' => '#6366f1'],
+                    ['label' => 'Video Tutorials', 'value' => $stats['video_tutorials'], 'color' => '#8b5cf6'],
+                    ['label' => 'Dynamic Images', 'value' => $stats['galleries'], 'color' => '#10b981'],
+                    ['label' => 'Premium Codes', 'value' => $stats['total_codes'], 'color' => '#f59e0b'],
                 ];
             @endphp
 
-            <div class="space-y-4">
-                @foreach ($contentRows as $row)
-                    <div>
-                        <div class="flex items-center justify-between text-sm mb-1.5">
-                            <span class="text-gray-600 dark:text-gray-400">{{ $row['label'] }}</span>
-                            <span class="font-semibold text-gray-900 dark:text-white">{{ number_format($row['value']) }}</span>
-                        </div>
-                        <div class="h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
-                            <div class="h-full rounded-full progress-fill {{ $row['bar'] }}"
-                                style="width: {{ round(($row['value'] / $row['max']) * 100) }}%"></div>
+            <div class="grid grid-cols-2 gap-3">
+                @foreach ($contentItems as $item)
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: {{ $item['color'] }}"></span>
+                        <div class="min-w-0">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ $item['label'] }}</p>
+                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ number_format($item['value']) }}</p>
                         </div>
                     </div>
                 @endforeach
@@ -432,6 +441,63 @@
             }
 
             build();
+        })();
+
+        // Content Overview Donut Chart
+        (function() {
+            const donutCtx = document.getElementById('contentDonutChart');
+            if (!donutCtx) return;
+
+            const contentData = [
+                {{ $stats['dynamic_pages'] }},
+                {{ $stats['video_tutorials'] }},
+                {{ $stats['galleries'] }},
+                {{ $stats['total_codes'] }}
+            ];
+            const contentColors = ['#6366f1', '#8b5cf6', '#10b981', '#f59e0b'];
+            const contentLabels = ['Dynamic Pages', 'Video Tutorials', 'Dynamic Images', 'Premium Codes'];
+
+            // If all values are 0, show a grey placeholder
+            const total = contentData.reduce((a, b) => a + b, 0);
+            const chartData = total === 0 ? [1] : contentData;
+            const chartColors = total === 0 ? ['#374151'] : contentColors;
+
+            new Chart(donutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: total === 0 ? ['No Data'] : contentLabels,
+                    datasets: [{
+                        data: chartData,
+                        backgroundColor: chartColors,
+                        borderColor: document.documentElement.classList.contains('dark') ? '#1e293b' : '#ffffff',
+                        borderWidth: 3,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15,23,42,0.9)',
+                            titleFont: { size: 12 },
+                            bodyFont: { size: 11 },
+                            padding: 10,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    if (total === 0) return 'No data yet';
+                                    const value = context.raw;
+                                    const pct = Math.round((value / total) * 100);
+                                    return ` ${context.label}: ${value} (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         })();
 
         // User Details Modal Logic
