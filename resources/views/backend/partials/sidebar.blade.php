@@ -100,7 +100,7 @@
                    <!-- Separate Menu for Dynamic Page & Video Tutorials -->
                    <li class="sidebar-list">
                        <i class="fa fa-thumb-tack"></i>
-                       <a class="sidebar-link sidebar-title {{ request()->routeIs('admin.dynamic_page.*') || request()->routeIs('admin.video_tutorial.*') ? 'active' : '' }}"
+                       <a class="sidebar-link sidebar-title {{ request()->routeIs('admin.dynamic_page.*') || request()->routeIs('admin.video_tutorial.*') || request()->routeIs('admin.dynamic_gallery.*') ? 'active' : '' }}"
                            href="#">
                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
                                fill="none" stroke="#ffffff" stroke-width="1" stroke-linecap="round"
@@ -111,7 +111,7 @@
                            <span>CMS Management</span>
                        </a>
                        <ul
-                           class="sidebar-submenu {{ request()->routeIs('admin.dynamic_page.*') || request()->routeIs('admin.video_tutorial.*') ? 'd-block' : '' }}">
+                           class="sidebar-submenu {{ request()->routeIs('admin.dynamic_page.*') || request()->routeIs('admin.video_tutorial.*') || request()->routeIs('admin.dynamic_gallery.*') ? 'd-block' : '' }}">
                            <li>
                                <a class="{{ request()->routeIs('admin.dynamic_page.*') ? 'active' : '' }}"
                                    href="{{ route('admin.dynamic_page.index') }}">
@@ -124,6 +124,12 @@
                                    Video Tutorials
                                </a>
                            </li>
+                            <li>
+                                <a class="{{ request()->routeIs('admin.dynamic_gallery.*') ? 'active' : '' }}"
+                                    href="{{ route('admin.dynamic_gallery.index') }}">
+                                    Dynamic Images
+                                </a>
+                            </li>
                        </ul>
                    </li>
                    <li class="sidebar-list">

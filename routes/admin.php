@@ -9,6 +9,7 @@ use App\Http\Controllers\Web\Backend\ProfileController;
 use App\Http\Controllers\Web\Backend\SocialMediaController;
 use App\Http\Controllers\Web\Backend\SystemSettingController;
 use App\Http\Controllers\Web\Backend\UserController;
+use App\Http\Controllers\Web\Backend\DynamicGalleryController;
 use App\Http\Controllers\Web\Backend\VideoTutorialController;
 
 Route::get('/dashboard', [DashBoardController::class, 'index'])
@@ -55,6 +56,15 @@ Route::controller(VideoTutorialController::class)->group(function () {
     Route::post('/video-tutorial/update/{id}', 'update')->name('video_tutorial.update');
     Route::get('/video-tutorial/status/{id}', 'status')->name('video_tutorial.status');
     Route::delete('/video-tutorial/destroy/{id}', 'destroy')->name('video_tutorial.destroy');
+});
+Route::controller(DynamicGalleryController::class)->group(function () {
+    Route::get('/dynamic-gallery', 'index')->name('dynamic_gallery.index');
+    Route::get('/dynamic-gallery/create', 'create')->name('dynamic_gallery.create');
+    Route::post('/dynamic-gallery/store', 'store')->name('dynamic_gallery.store');
+    Route::get('/dynamic-gallery/edit/{id}', 'edit')->name('dynamic_gallery.edit');
+    Route::post('/dynamic-gallery/update/{id}', 'update')->name('dynamic_gallery.update');
+    Route::get('/dynamic-gallery/status/{id}', 'status')->name('dynamic_gallery.status');
+    Route::delete('/dynamic-gallery/destroy/{id}', 'destroy')->name('dynamic_gallery.destroy');
 });
 Route::controller(PremiumCodeController::class)->prefix('premium-code')->name('premium_code.')->group(function () {
     Route::get('/', 'index')->name('index');
