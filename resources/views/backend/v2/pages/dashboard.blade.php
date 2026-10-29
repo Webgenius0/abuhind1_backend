@@ -120,29 +120,15 @@
                 ];
             @endphp
 
-            <div style="display: flex; align-items: center; gap: 24px;">
-                {{-- Donut Chart --}}
-                <div style="position: relative; width: 160px; height: 160px; flex-shrink: 0;">
-                    <canvas id="contentDonutChart" width="160" height="160"></canvas>
+            <div style="display: flex; align-items: center; justify-content: center;">
+                <div style="position: relative; width: 200px; height: 200px;">
+                    <canvas id="contentDonutChart" width="200" height="200"></canvas>
                     <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                         <span class="text-2xl font-bold text-gray-900 dark:text-white">
                             {{ number_format($stats['dynamic_pages'] + $stats['video_tutorials'] + $stats['galleries'] + $stats['total_codes']) }}
                         </span>
                         <span style="font-size: 11px;" class="text-gray-500 dark:text-gray-400">Total Items</span>
                     </div>
-                </div>
-
-                {{-- Legend --}}
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1;">
-                    @foreach ($contentItems as $item)
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; background-color: {{ $item['color'] }};"></span>
-                            <div style="min-width: 0;">
-                                <p style="font-size: 12px; margin: 0;" class="text-gray-500 dark:text-gray-400">{{ $item['label'] }}</p>
-                                <p style="font-size: 14px; font-weight: 600; margin: 0;" class="text-gray-900 dark:text-white">{{ number_format($item['value']) }}</p>
-                            </div>
-                        </div>
-                    @endforeach
                 </div>
             </div>
         </div>
