@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\UserIdMail;
 use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -42,8 +44,9 @@ class SocialLoginController extends Controller
 
             $email = $socialUser->getEmail();
             $user = User::firstOrNew(['email' => $email]);
+            $isNewUser = !$user->exists;
 
-            if (!$user->exists) {
+            if ($isNewUser) {
                 // Register new user with a unique user ID
                 $user->user_id = $this->generateUniqueUserId();
 
@@ -67,6 +70,19 @@ class SocialLoginController extends Controller
             $user->provider_id = $socialUser->getId();
             $user->provider_token = $request->token;
             $user->save();
+
+            // Send User ID email ONLY if the user is newly registered
+            if ($isNewUser && $user->user_id) {
+                try {
+                    Mail::to($user->email)->send(new UserIdMail($user, $user->user_id));
+                } catch (\Throwable $mailError) {
+                    Log::error('Failed to send User ID email after social login', [
+                        'email'   => $user->email,
+                        'user_id' => $user->user_id,
+                        'error'   => $mailError->getMessage(),
+                    ]);
+                }
+            }
 
             // Revoke previous tokens and issue a fresh session token
             $user->tokens()
