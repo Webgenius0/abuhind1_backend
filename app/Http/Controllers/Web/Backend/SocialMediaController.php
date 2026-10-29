@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 
 use App\Models\SocialMedia;
 use Exception;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class SocialMediaController extends Controller
@@ -15,7 +14,8 @@ class SocialMediaController extends Controller
     public function index()
     {
         $social_link = SocialMedia::latest('id')->get();
-        return view('backend.layouts.settings.social_media', compact('social_link'));
+
+        return view('backend.v2.pages.settings.social', compact('social_link'));
     }
 
     public function update(Request $request)
@@ -30,10 +30,12 @@ class SocialMediaController extends Controller
             return back()->withErrors($validator)->withInput();
         }
         try {
-            $idsToUpdate = collect($request->social_media_id)->filter()->all();
+            $idsToUpdate = collect((array) $request->social_media_id)->filter()->all();
 
-            foreach ($request->social_media as $index => $media) {
-                $profileLink   = $request->profile_link[$index] ?? null;
+            $profileLinks = (array) $request->profile_link;
+
+            foreach ((array) $request->social_media as $index => $media) {
+                $profileLink   = $profileLinks[$index] ?? null;
                 $socialMediaId = $request->social_media_id[$index] ?? null;
 
                 if ($media && $profileLink) {
@@ -61,17 +63,15 @@ class SocialMediaController extends Controller
         try {
             SocialMedia::destroy($id);
 
-            DB::commit();
-
             return response()->json([
-                'success' => true,
-                'message' => 'Social media link deleted successfully.',
+                't-success' => true,
+                'message'   => 'Social media link deleted successfully.',
             ]);
         } catch (Exception $e) {
             return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete social media link.',
-                'error'   => $e->getMessage(),
+                't-success' => false,
+                'message'   => 'Failed to delete social media link.',
+                'error'     => $e->getMessage(),
             ], 500);
         }
     }

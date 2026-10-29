@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\SocialLoginController;
+use App\Http\Controllers\Api\DynamicGalleryController;
 use App\Http\Controllers\Api\DynamicPageApiController;
 use App\Http\Controllers\Api\FaceAnalysisController;
 use App\Http\Controllers\Api\FaceMetricController;
@@ -24,6 +25,9 @@ Route::post('/login-with-user-id', [SocialLoginController::class, 'loginWithUser
 
 Route::get('/pages', [DynamicPageApiController::class, 'index']);
 Route::get('/pages/{slug}', [DynamicPageApiController::class, 'show']);
+Route::get('/dynamic-galleries', [DynamicGalleryController::class, 'index']);
+Route::get('/dynamic-galleries/{id}', [DynamicGalleryController::class, 'show']);
+
 
 Route::controller(RegisterController::class)->prefix('users/register')->group(function () {
     Route::post('/', 'userRegister');
@@ -63,6 +67,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/video-tutorials', 'index');
     });
 
+    // Dynamic gallery
+    Route::controller(DynamicGalleryController::class)->group(function () {
+        Route::get('/dynamic-galleries', 'index');
+        Route::get('/dynamic-galleries/{id}', 'show');
+    });
     // User account
     Route::controller(UserController::class)->prefix('user')->group(function () {
         Route::get('/', 'userDetails');

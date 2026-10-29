@@ -15,77 +15,105 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
-use Yajra\DataTables\DataTables;
+use Yajra\DataTables\Facades\DataTables;
 
 class PremiumCodeController extends Controller
 {
     // 0/O ar 1/I bad, jate kreta code vul na pore
     protected const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
-    public function index(Request $request): View|JsonResponse
+    public function index(Request $request): View | JsonResponse
     {
-        Log::info('premium-code index hit', [
-            'ajax'   => $request->ajax(),
-            'wants'  => $request->wantsJson(),
-            'header' => $request->header('X-Requested-With'),
-            'method' => $request->method(),
-        ]);
-
         if ($request->ajax()) {
-            $data = PremiumCode::with(['assignedUser:id,name,email', 'usedBy:id,name,email'])->latest();
+            $query = PremiumCode::with(['assignedUser:id,name,email', 'usedBy:id,name,email'])->latest('id');
 
-            if (!empty($request->input('search.value'))) {
-                $searchTerm = $request->input('search.value');
-                $data->where('code', 'LIKE', "%$searchTerm%");
+            if ($status = $request->input('status')) {
+                $query->withStatus($status);
             }
 
-            if ($request->filled('status')) {
-                $data->withStatus($request->input('status'));
-            }
-
-            return DataTables::of($data)
+            return DataTables::of($query)
                 ->addIndexColumn()
-                ->addColumn('assigned_user', function ($data) {
-                    return $data->assignedUser?->email ?? '—';
-                })
-                ->addColumn('used_by', function ($data) {
-                    return $data->usedBy?->email ?? '—';
-                })
-                ->addColumn('validity', function ($data) {
-                    return $data->validity_days ? $data->validity_days . ' days' : 'Lifetime';
-                })
-                ->addColumn('status', function ($data) {
-                    $badge = match ($data->status) {
-                        'used'    => 'bg-secondary',
-                        'expired' => 'bg-danger',
-                        default   => 'bg-success',
-                    };
-                    return '<span class="badge ' . $badge . '">' . ucfirst($data->status) . '</span>';
-                })
-                ->addColumn('action', function ($data) {
-                    if ($data->status !== 'unused') {
-                        return '';
+                ->addColumn('code_info', function (PremiumCode $code) {
+                    $html = '<span class="font-mono text-xs font-semibold text-gray-800 dark:text-gray-100 bg-gray-100 dark:bg-gray-800 rounded-lg px-2 py-1">' . e($code->code) . '</span>';
+                    if ($code->note) {
+                        $html .= '<span class="block text-xs text-gray-400 mt-1">' . e($code->note) . '</span>';
                     }
-                    $editUrl = route('admin.premium_code.edit', $data->id);
-                    return '<div class="btn-group btn-group-sm" role="group">
-                                <a href="' . $editUrl . '" class="text-white btn btn-primary" title="Edit">
-                                   <i class="fa fa-edit" aria-hidden="true"></i>
-                                </a>
-                                <a href="javascript:void(0)" onclick="showDeleteAlert(' . $data->id . ')" class="text-white btn btn-danger" title="Delete">
-                                   <i class="fa fa-trash" aria-hidden="true"></i>
-                                </a>
-                            </div>';
+
+                    return $html;
                 })
-                ->rawColumns(['status', 'action'])
-                ->make();
+                ->filterColumn('code_info', function ($query, $keyword) {
+                    $query->where(function ($q) use ($keyword) {
+                        $q->where('code', 'like', "%{$keyword}%")
+                            ->orWhere('note', 'like', "%{$keyword}%");
+                    });
+                })
+                ->addColumn('assigned_to', function (PremiumCode $code) {
+                    return e($code->assignedUser?->email ?? '—');
+                })
+                ->addColumn('validity', function (PremiumCode $code) {
+                    return $code->validity_days ? ($code->validity_days . ' days') : 'Lifetime';
+                })
+                ->addColumn('status', function (PremiumCode $code) {
+                    $statusStyles = [
+                        'unused'  => 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400',
+                        'used'    => 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+                        'expired' => 'bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-400',
+                    ];
+                    $status = $code->status;
+                    $badge  = '<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ' . ($statusStyles[$status] ?? $statusStyles['unused']) . '">' . ucfirst($status) . '</span>';
+
+                    if ($status === 'used') {
+                        return $badge;
+                    }
+
+                    $checked = ($status === 'unused') ? 'checked' : '';
+
+                    return '<div class="flex items-center justify-center gap-2">
+                        ' . $badge . '
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" onclick="changeStatus(event, ' . $code->id . ')" class="sr-only peer" ' . $checked . '>
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[\'\'] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-green-500"></div>
+                        </label>
+                    </div>';
+                })
+                ->addColumn('used_by_user', function (PremiumCode $code) {
+                    return e($code->usedBy?->email ?? '—');
+                })
+                ->addColumn('created_at', function (PremiumCode $code) {
+                    return $code->created_at ? $code->created_at->format('d M, Y') : 'N/A';
+                })
+                ->addColumn('action', function (PremiumCode $code) {
+                    $editBtn = '';
+                    if ($code->status === 'unused') {
+                        $editUrl = route('admin.premium_code.edit', $code->id);
+                        $editBtn = '<a href="' . $editUrl . '"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg text-blue-600 bg-blue-100 hover:bg-blue-600 hover:text-white dark:text-blue-400 dark:bg-blue-900/30 dark:hover:bg-blue-600 dark:hover:text-white transition-all shadow-sm hover:shadow"
+                            title="Edit Code">
+                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                        </a>';
+                    }
+
+                    return '<div class="flex items-center justify-center gap-2">
+                        ' . $editBtn . '
+                        <button type="button"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg text-red-600 bg-red-100 hover:bg-red-600 hover:text-white dark:text-red-400 dark:bg-red-900/30 dark:hover:bg-red-600 dark:hover:text-white transition-all shadow-sm hover:shadow"
+                            onclick="deleteRecord(event, ' . $code->id . ')"
+                            title="Delete Code">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </div>';
+                })
+                ->rawColumns(['code_info', 'status', 'action'])
+                ->make(true);
         }
-        return view('backend.layouts.premium_code.index');
+
+        return view('backend.v2.pages.premium_code.index');
     }
 
     public function create(): View|RedirectResponse
     {
         $users = User::select('id', 'name', 'email')->orderBy('name')->get();
-        return view('backend.layouts.premium_code.create', compact('users'));
+        return view('backend.v2.pages.premium_code.create', compact('users'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -166,7 +194,7 @@ class PremiumCodeController extends Controller
 
         $users = User::select('id', 'name', 'email')->orderBy('name')->get();
 
-        return view('backend.layouts.premium_code.edit', compact('code', 'users'));
+        return view('backend.v2.pages.premium_code.edit', compact('code', 'users'));
     }
 
     public function update(Request $request, int $id): RedirectResponse
@@ -231,23 +259,76 @@ class PremiumCodeController extends Controller
         }
     }
 
+    public function status(int $id): JsonResponse
+    {
+        try {
+            $code = PremiumCode::findOrFail($id);
+
+            if ($code->used_at) {
+                return response()->json([
+                    't-error' => true,
+                    'success' => false,
+                    'message' => 'Used codes cannot be toggled.',
+                ], 422);
+            }
+
+            if ($code->status === 'expired') {
+                $code->code_expires_at = null;
+                $code->save();
+
+                return response()->json([
+                    't-success' => true,
+                    'success'   => true,
+                    'message'   => 'Code reactivated successfully.',
+                    'data'      => $code,
+                ]);
+            } else {
+                $code->code_expires_at = now()->subMinute();
+                $code->save();
+
+                return response()->json([
+                    't-success' => true,
+                    'success'   => true,
+                    'message'   => 'Code marked as expired.',
+                    'data'      => $code,
+                ]);
+            }
+        } catch (Exception $e) {
+            return response()->json([
+                't-error' => true,
+                'success' => false,
+                'message' => 'Failed to update code status: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function destroy(int $id): JsonResponse
     {
-        $data = PremiumCode::findOrFail($id);
+        try {
+            $data = PremiumCode::findOrFail($id);
 
-        if ($data->used_at) {
+            if ($data->used_at) {
+                return response()->json([
+                    't-error'   => true,
+                    'success'   => false,
+                    'message'   => 'Used codes cannot be deleted.',
+                ], 422);
+            }
+
+            $data->delete();
+
             return response()->json([
-                't-success' => false,
-                'message'   => 'Used codes cannot be deleted.',
-            ], 422);
+                't-success' => true,
+                'success'   => true,
+                'message'   => 'Code deleted successfully.',
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                't-error' => true,
+                'success' => false,
+                'message' => 'Failed to delete code: ' . $e->getMessage(),
+            ], 500);
         }
-
-        $data->delete();
-
-        return response()->json([
-            't-success' => true,
-            'message'   => 'Deleted successfully.',
-        ]);
     }
 
     /**
