@@ -23,17 +23,22 @@ class SystemSetting extends Model
     protected function casts(): array
     {
         return [
-            'id'             => 'integer',
-            'title'          => 'string',
-            'email'          => 'string',
-            'system_name'    => 'string',
-            'copyright_text' => 'string',
-            'logo'           => 'string',
-            'favicon'        => 'string',
-            'description'    => 'string',
-            'created_at'     => 'datetime',
-            'updated_at'     => 'datetime',
-            'deleted_at'     => 'datetime',
+            'id'                  => 'integer',
+            'title'               => 'string',
+            'email'               => 'string',
+            'system_name'         => 'string',
+            'phone'               => 'string',
+            'address'             => 'string',
+            'timezone'            => 'string',
+            'maintenance_mode'    => 'boolean',
+            'maintenance_message' => 'string',
+            'copyright_text'      => 'string',
+            'logo'                => 'string',
+            'favicon'             => 'string',
+            'description'         => 'string',
+            'created_at'          => 'datetime',
+            'updated_at'          => 'datetime',
+            'deleted_at'          => 'datetime',
         ];
     }
 
