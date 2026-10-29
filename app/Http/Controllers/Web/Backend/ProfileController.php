@@ -20,7 +20,7 @@ class ProfileController extends Controller
     public function showProfile()
     {
         $userDetails = User::where('id', Auth::id())->first();
-        return view('backend.layouts.settings.profile_settings', ['userDetails' => $userDetails]);
+        return view('backend.v2.pages.settings.profile', ['userDetails' => $userDetails]);
     }
 
     /**

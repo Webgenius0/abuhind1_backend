@@ -9,8 +9,6 @@ use App\Services\OtpService;
 use App\Models\SystemSetting;
 use App\Repositories\Contracts\FaceScanRepositoryInterface;
 use App\Repositories\FaceScanRepository;
-use App\Repositories\VideoTutorial\VideoTutorialRepositoryInterface;
-use App\Repositories\VideoTutorialRepository;
 use App\Services\AuthService;
 use Illuminate\Support\ServiceProvider;
 
