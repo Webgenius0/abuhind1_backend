@@ -48,15 +48,9 @@ class DynamicPageController extends Controller
                     return $page->created_at ? $page->created_at->format('d M, Y') : 'N/A';
                 })
                 ->addColumn('action', function (DynamicPage $page) {
-                    $viewUrl = route('page.show', $page->page_slug);
                     $editUrl = route('admin.dynamic_page.edit', $page->id);
 
                     return '<div class="flex items-center justify-center gap-2">
-                        <a href="' . $viewUrl . '" target="_blank"
-                            class="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-600 bg-emerald-100 hover:bg-emerald-600 hover:text-white dark:text-emerald-400 dark:bg-emerald-900/30 dark:hover:bg-emerald-600 dark:hover:text-white transition-all shadow-sm hover:shadow"
-                            title="View Page">
-                            <i class="fa-solid fa-eye text-sm"></i>
-                        </a>
                         <a href="' . $editUrl . '"
                             class="w-8 h-8 flex items-center justify-center rounded-lg text-blue-600 bg-blue-100 hover:bg-blue-600 hover:text-white dark:text-blue-400 dark:bg-blue-900/30 dark:hover:bg-blue-600 dark:hover:text-white transition-all shadow-sm hover:shadow"
                             title="Edit Page">
