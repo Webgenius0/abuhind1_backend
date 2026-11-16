@@ -38,4 +38,4 @@ jobs:
         if: steps.ftp_deploy.outcome == 'failure'
         run: |
           sudo apt-get update -qq && sudo apt-get install -y lftp
-          lftp -e "set net:timeout 60; set net:max-retries 3; set ftp:ssl-allow yes; set ssl:verify-certificate no; set ftp:passive-mode true; open -u '${{ secrets.FTP_USERNAME }}','${{ secrets.FTP_PASSWORD }}' '${{ secrets.FTP_SERVER }}'; mirror -R --verbose --exclude-glob .git* --exclude-glob vendor/ --exclude-glob node_modules/ --exclude-glob .env ./ ${{ secrets.FTP_SERVER_DIR || '' }}; quit"
+          lftp -e "set net:timeout 60; set net:max-retries 3; set ftp:ssl-allow yes; set ssl:verify-certificate no; set ftp:passive-mode true; open -u '${{ secrets.FTP_USERNAME }}','${{ secrets.FTP_PASSWORD }}' '${{ secrets.FTP_SERVER }}'; mirror -R --verbose --no-perms --exclude-glob .git* --exclude-glob vendor/ --exclude-glob node_modules/ --exclude-glob .env ./ ${{ secrets.FTP_SERVER_DIR || '' }}; quit"
